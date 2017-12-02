@@ -1,44 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <title>Hack-Char's Blog</title>
         <meta charset="utf-8" />
+        <title>Hack-Char's Blog</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
 </head>
 
 <body id="index" class="home">
         <header id="banner" class="body">
-                <h1><a href="/">Hack-Char's Blog <strong></strong></a></h1>
+                <h1><a href="/">Hack-Char's Blog </a></h1>
+                <nav><ul>
+                    <li><a href="/category/misc.html">misc</a></li>
+                </ul>
+                </nav>
         </header><!-- /#banner -->
-        <nav id="menu"><ul>
-        </ul></nav><!-- /#menu -->
-<section id="content">
-<h2>All articles</h2>
 
-<ol id="post-list">
-        <li><article class="hentry">
-                <header> <h2 class="entry-title"><a href="/intel-management-engine-vulnerabilities.html" rel="bookmark" title="Permalink to Intel Management Engine Vulnerabilities">Intel Management Engine Vulnerabilities</a></h2> </header>
-                <footer class="post-info">
-                    <time class="published" datetime="2017-12-01T00:00:00-08:00"> Fri 01 December 2017 </time>
-                    <address class="vcard author">By
-                        <a class="url fn" href="/author/char.html">Char</a>
-                    </address>
-                </footer><!-- /.post-info -->
-                <div class="entry-content"> <div class="section" id="intel-management-engine">
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/intel-management-engine-vulnerabilities.html">Intel Management Engine Vulnerabilities</a></h1>
+<footer class="post-info">
+        <span>Fri 01 December 2017</span>
+<span>| tags: <a href="/tag/intel-me.html">Intel ME</a><a href="/tag/ime.html">ime</a></span>
+</footer><!-- /.post-info --><div class="section" id="intel-management-engine">
 <h2>Intel Management Engine</h2>
 <div class="section" id="what-is-it">
 <h3>What is it?</h3>
 <p>A few months ago, there was a white paper 'Silent Bob is Silent' describing an Intel ME vulnerability.
 There were a whole slew of new vulnerabilities found <a class="reference external" href="https://security-center.intel.com/advisory.aspx?intelid=INTEL-SA-00086&amp;languageid=en-fr">Intel ME CVEs</a></p>
 <p>The best write up describing these new issues is in this Trend Micro
-<a class="reference external" href="http://blog.trendmicro.com/trendlabs-security-intelligence/mitigating-cve-2017-5689-intel-management-engine-vulnerability/">blog …</a></p></div></div> </div><!-- /.entry-content -->
-        </article></li>
-</ol><!-- /#posts-list -->
-</section><!-- /#content -->
+<a class="reference external" href="http://blog.trendmicro.com/trendlabs-security-intelligence/mitigating-cve-2017-5689-intel-management-engine-vulnerability/">blog</a></p>
+</div>
+<div class="section" id="what-s-vulnerable">
+<h3>What's vulnerable?</h3>
+<p>Everyone that bought a new computer in the last decade or so.
+But might not be as disasterous as some have made it out to be. Assuming you don't have remote managability features enabled...</p>
+<p>To get useful information, use this <a class="reference external" href="https://github.com/zamaudio/intelmetool">IntelMEtool utility</a>
+Make sure to follow the instructions and <tt class="docutils literal">rmmod</tt> the me modules as well as issue a <tt class="docutils literal">iomem=relaxed</tt> to your kernel boot args.</p>
+<p>The output for this tool on my computer looks like this (without trying to invasively remove the Intel ME):</p>
+<pre class="literal-block">
+Bad news, you have a `Sunrise Point-H CSME HECI #1` so you have ME hardware on board and it is very difficult to remove, continuing...
+RCBA at 0x00000000
+MEI was hidden on PCI, now unlocked
+MEI found: [8086:a13a] Sunrise Point-H CSME HECI #1
+
+ME Status   : 0x90000245
+ME Status 2 : 0x86110306
+
+ME: FW Partition Table      : OK
+ME: Bringup Loader Failure  : NO
+ME: Firmware Init Complete  : YES
+ME: Manufacturing Mode      : NO
+ME: Boot Options Present    : NO
+ME: Update In Progress      : NO
+ME: Current Working State   : Normal
+ME: Current Operation State : M0 with UMA
+ME: Current Operation Mode  : Normal
+ME: Error Code              : No Error
+ME: Progress Phase          : Clean Moff-&gt;Mx wake
+ME: Power Management Event  : Pseudo-global reset
+ME: Progress Phase State    : Unknown 0x11
+
+PCI READ [bc] : 0x000000bc
+ME: Extend Register not valid
+
+ME seems okay on this board
+WRITE    [00] : CB: 0x80040007
+WRITE    [00] : CB: 0x000002ff
+READ     [08] : CB: 0x801c0007
+READ     [08] : CB: 0x000082ff
+READ     [08] : CB: 0x000b0000
+READ     [08] : CB: 0x0000049c
+READ     [08] : CB: 0x000b0000
+READ     [08] : CB: 0x0000049c
+READ     [08] : CB: 0x000b0000
+READ     [08] : CB: 0x0000049c
+ME: Firmware Version 11.0.1180.0 (code) 11.0.1180.0 (recovery) 11.0.1180.0 (fitc)
+WRITE    [00] : CB: 0x80080007
+WRITE    [00] : CB: 0x00000203
+WRITE    [00] : CB: 0x00000000
+READ     [08] : CB: 0x800d0007
+READ     [08] : CB: 0x00008203
+READ     [08] : CB: 0x00000000
+READ     [08] : CB: 0x11194004
+READ     [08] : CB: 0x00000031
+ME Capability: Full Network manageability                 : OFF
+ME Capability: Regular Network manageability              : OFF
+ME Capability: Manageability                              : OFF
+ME Capability: Small business technology                  : OFF
+ME Capability: Level III manageability                    : OFF
+ME Capability: IntelR Anti-Theft (AT)                     : OFF
+ME Capability: IntelR Capability Licensing Service (CLS)  : ON
+ME Capability: IntelR Power Sharing Technology (MPC)      : OFF
+ME Capability: ICC Over Clocking                          : ON
+ME Capability: Protected Audio Video Path (PAVP)          : ON
+ME Capability: IPV6                                       : OFF
+ME Capability: KVM Remote Control (KVM)                   : OFF
+ME Capability: Outbreak Containment Heuristic (OCH)       : OFF
+ME Capability: Virtual LAN (VLAN)                         : ON
+ME Capability: TLS                                        : OFF
+ME Capability: Wireless LAN (WLAN)                        : OFF
+Re-hiding MEI device...done, exiting
+</pre>
+<p>Also you could get the official 'detection' utility from intel:
+<a class="reference external" href="https://www.intel.com/content/www/us/en/support/articles/000025619/software.html">https://www.intel.com/content/www/us/en/support/articles/000025619/software.html</a></p>
+<p>The output above gives me confidence my laptop is not remotely exploitable as the manageability features are all disabled. The VLAN capability is a little bit
+disconcerting, but to help prove to myself its at least not remotely exploitable - scan the ports associated with the AMT features: 16992-16995 and 623 and 664.</p>
+<p>That is not to say I am not affected. I am. However, the one remotely exploitable CVE is not likely an issue for my machine.</p>
+</div>
+<div class="section" id="what-can-you-do">
+<h3>What can you do?</h3>
+<p>Remove Intel ME!
+This is a pretty drastic step, and will require you are familiar with hardware.
+Specifically, you will need to physically connect to the flash chip on your motherboard that contains the Intel ME firmware code. You then dump the code to a local machine,
+use a utility to attempt a patch and then re-program the chip. If it works, you can boot back up and see most functionality was disabled.</p>
+<p>Follow this great <a class="reference external" href="https://wiki.gentoo.org/wiki/Sakaki%27s_EFI_Install_Guide/Disabling_the_Intel_Management_Engine">guide</a> to do everything possible
+to remove or disbable as much of the Intel ME as possible. Also refer to the <a class="reference external" href="https://github.com/corna/me_cleaner">me_cleaner</a> site which is used to make
+the actual modifications to your dumped firmware.</p>
+</div>
+</div>
+                </article>
+<p class="paginator">
+    Page 1 / 1
+</p>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
         <footer id="contentinfo" class="body">
-                <address id="about" class="vcard body">
-                Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
-                which takes great advantage of <a href="http://python.org">Python</a>.
-                </address><!-- /#about -->
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
         </footer><!-- /#contentinfo -->
+
 </body>
 </html>
