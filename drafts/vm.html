@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Hack Char</title>
+    <title>Cloud and Virtualization</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="Char">
@@ -79,7 +79,86 @@
     <div class="container-fluid">
       <div class="row">
         <div class="span9" id="content">
+<section id="content">
+        <article>
+                <header>
+                        <h1>
+                                <a href=""
+                                        rel="bookmark"
+                                        title="Permalink to Cloud and Virtualization">
+                                        Cloud and Virtualization
+                                </a>
+                        </h1>
+                </header>
+                <div class="entry-content">
+                <div class="well">
+<footer class="post-info">
+<span class="label">Date</span>
+<abbr class="published" title="2018-03-17T00:00:00-07:00">
+        <i class="icon-calendar"></i>Sat 17 March 2018
+</abbr>
+<span class="label">By</span>
+<a href="http://127.0.0.1:8000/author/char.html"><i class="icon-user"></i>Char</a>
+<span class="label">Category</span>
+<a href="http://127.0.0.1:8000/category/cloud.html"><i class="icon-folder-open"></i>cloud</a>.
 
+
+<span class="label">Tags</span>
+	<a href="http://127.0.0.1:8000/tag/vm.html"><i class="icon-tag"></i>vm</a>
+	<a href="http://127.0.0.1:8000/tag/cloud.html"><i class="icon-tag"></i>cloud</a>
+</footer><!-- /.post-info -->                </div>
+                <div class="section" id="rough-draft">
+<h2>ROUGH DRAFT</h2>
+<div class="section" id="cloud">
+<h3>Cloud</h3>
+<p>Clouds are amorphous things floating somewhere <em>out there</em>.
+In this case it's also a term for maximizing hardware usage by running multiple virtual machines (vm).</p>
+<blockquote>
+<dl class="docutils">
+<dt>Virtualization</dt>
+<dd>Running a virtual machine using a bare-metal CPU which has hardware extensions for running
+virtual machines. This makes virtual machine execution very efficient and very isolated from the
+underlying bare-metal OS or hypervisor.</dd>
+<dt>Emulation</dt>
+<dd>Running a virtual machine in a software defined environment. It does not take advantage of
+hardware acceleration to execute, but has the benefit of being able to run a different underlying
+architecture. For example, you can run an emulation of an ARM processor on your Intel-based PC.</dd>
+</dl>
+</blockquote>
+<p>Common software used to run virtual machines includes Qemu, VMware Workstation/Player, VirtualBox, etc.
+There's also dedicated hypervisors that attempt to fully maximize your hardware resources by not running
+an underlying full OS. These include VMware ESXi (aka vSphere), Xen, OpenCloud, etc.</p>
+<p>This blog will mainly confine itself to Qemu and VMware ESXi/vSphere.</p>
+</div>
+<div class="section" id="qemu">
+<h3>Qemu</h3>
+<p>The go-to Linux vm management utility. It's all command line and uses the Linux KVM to run virtualized.
+Many additional programs have been built to run on top of this in order to make it more user friendly. An
+example is Red Hat's libvirt.</p>
+</div>
+<div class="section" id="vsphere">
+<h3>vSphere</h3>
+<p>You might ask yourself, why in the world does a blog that seems dedicated to open source tools include a
+notoriously expensive VMware solution. In this case, the basic ESXi hypervisor is <em>FREE</em>. Yes <em>FREE</em> as in
+the absolute basic functionality is available for free. When installed it gives you a 60-day trial license
+after which you can install the <em>FREE</em> license you register for. This <em>FREE</em> license limits you to at most
+480 logical CPUs per host and at most 8 virtual CPUs per VM. This isn't a terrible deal. It doesn't however
+let you connect the free version on multiple physical machines. That would require the paid version and
+vCenter. This then allows pooling resources, much better logging and management as well as live migration of
+VMs between different physical hosts.</p>
+<div class="section" id="esxi-vs-vsphere">
+<h4>ESXi vs vSphere</h4>
+<p>There's a lot of jargon being thrown around when looking at VMware products. It looks like VMware is trying
+to call all of its hypervisor solution 'vSphere' although the actual bare-metal hypervisor is still called
+ESXi. The term 'vSphere' applies to most of the management utilites, for example, the built-in web interface
+and the vCenter management interface (potentially also a web interface).</p>
+</div>
+</div>
+</div>
+
+                </div><!-- /.entry-content -->
+        </article>
+</section>
         </div><!--/span-->
 
                 <div class="span3 well sidebar-nav" id="sidebar">
