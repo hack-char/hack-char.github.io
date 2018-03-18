@@ -201,19 +201,62 @@ I extracted VMware-vCenter-Server-Appliance-6.5.0.10000-5973321_OVF10.ova from t
 esxi1.</p>
 <p>2) <em>BE PATIENT</em>. You'll see a number of different changes in the console as VCSA is being booted and running its never-ending
 installation scripts. <em>DO NOT MESS WITH IT</em>. <em>IF YOU MESS WITH IT YOU WILL BE DELETING IT AND STARTING OVER</em>.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-32-51.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-33-56.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-35-45.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-41-23.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-42-40.png" style="width: 800px;" />
+<hr class="docutils" />
 <p>3) When you see this screen showing it was assigned a DHCP address (even if you manually chose an IP address to assign it), you
 are ready to log into it. You'll need to log in on the console the first time to set the root password. It will not require a default
 at this point but step you through a 2-step verification of a new root password.
 If you want to be sporty and see what the heck it is doing before this screen, you can log in using the pre-default 'vmware' password
 for root. But be warned, you will probably mess something up and have to re-install <em>again</em>. I installed this thing a million times.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-47-52.png" style="width: 800px;" />
+<hr class="docutils" />
 <p>4) When you are at this point, you can finally open the web interface of the VCSA VM. 'If you're using QS', be warned, you will need
 to add the IP or IP range that this VCSA VM has to the NFTables trusted_ip set. If you don't then it will block this IP and you won't
 be happy. You will be :( or at best :|</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-17.png" style="width: 800px;" />
+<hr class="docutils" />
 <p>5) Yet more installation screens. Yes, you thought you were done installing VCSA, but YOU WERE NOT! Follow through the rest of these
-installation screens to let it kick of yet more scripts. It is important to fill in and remember the Single Sign On (SSO) set up
+installation screens to let it kick off yet more scripts. It is important to fill in and remember the Single Sign On (SSO) set up
 as you will need to enter the <a class="reference external" href="mailto:'administrator&#64;some.sso">'administrator&#64;some.sso</a>' as your username at the final, real web interface.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-38.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-55-07.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-56-48.png" style="width: 800px;" />
+<hr class="docutils" />
 <p>6) I found that this entire process of installing VCSA took be about one hour. Most of which is just spent waiting for the
 darn scripts to run. When it's finally done, you can log in and see all the glory that is vCenter.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-00-28.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-02-46.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-07-42.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-14-06.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-18-49.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-20-34.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-03.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-31.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-26-15.png" style="width: 800px;" />
+<hr class="docutils" />
 <div class="section" id="attaching-esxi-hosts-to-vcenter">
 <h5>Attaching ESXi Hosts to vCenter</h5>
 <p>It might seem strange, but you can attach the hosting ESXi instance to vCenter running inside it. It works just fine. Furthermore,
@@ -221,21 +264,49 @@ after I attached all four ESXi instances, I then performed a magic migration whi
 It took a really long time, however, the VM kept running throughout the process! Thats the primary benefit I've seen to using vCenter
 and managing a larger pool of ESXi hosts. In addition, you won't need to manually log in to however many ESXi you have, just to the single
 vCenter instance when managing your VMware cloud.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-30-03.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-31-16.png" style="width: 800px;" />
 </div>
+<hr class="docutils" />
+<div class="section" id="migrating-a-vm-using-vmotion">
+<h5>Migrating a VM using vMotion</h5>
+<p>To migrate a VM, you'll use 'vMotion'. You must enable 'vMotion' on the sending and receiving ESXi hosts. Then it's simply a matter of
+right-clicking and choosing to migrate. You can choose to migrate the storage or just the execution. In this example both storage and
+execution were migrated. You can see how at the very end the actual execution was migrated such that the running VM was not disrupted.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-56-57.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-58-44.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-06-34.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-10-18.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-15-21.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-17-47.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-19-13.png" style="width: 800px;" />
+</div>
+<hr class="docutils" />
 <div class="section" id="making-a-new-vm">
 <h5>Making a new VM</h5>
 <p>There's a nice interface on ESXi to help you create new VMs. I however, like Qemu and my QS tool and want to use VMs I made there inside
 of ESXi. It's not that tough...</p>
-<p>1) Make a 'dummy' VM in ESXi. Follow the prompts and make a VM that corresponds with the Linux flavor you actually want. Make sure to
-choose 'lsilogic' as the storage adapter.
-2) Export that VM and you'll get a VMDK and OVF file on your local machine.
-3) Convert your Qemu storage image from either qcow2 or raw to VMDK. <em>THIS IS IMPORTANT</em>. You must include the following option on the
+<ol class="arabic simple">
+<li>Make a 'dummy' VM in ESXi. Follow the prompts and make a VM that corresponds with the Linux flavor you actually want. Make sure to
+choose 'lsilogic' as the storage adapter.</li>
+<li>Export that VM and you'll get a VMDK and OVF file on your local machine.</li>
+<li>Convert your Qemu storage image from either qcow2 or raw to VMDK. <em>THIS IS IMPORTANT</em>. You must include the following option on the
 'qemu-img' convert utility to make the VMDK a 'streamOptimized' flavor of VMDK. ESXi just doesn't like the default that qemu-img spits out.
 <code>qemu-img convert -O vmdk /rpool1/vm/deb.raw -o adapter_type=lsilogic,subformat=streamOptimized,compat6 deb.vmdk</code>
-The important bit is <code>-o adapter_type=lsilogic,subformat=streamOptimized,compat6</code>.
-4) Update your OVF file to point to this VMDK you just made and make any other modifications you might want.
-5) Use tar to make your OVA and include the OVF before your VMDK.
-6) That's it! You now have a VMware friendly OVA that you can import into ESXi (or Workstation, etc)</p>
+The important bit is <code>-o adapter_type=lsilogic,subformat=streamOptimized,compat6</code>.</li>
+<li>Update your OVF file to point to this VMDK you just made and make any other modifications you might want.</li>
+<li>Use tar to make your OVA and include the OVF before your VMDK.</li>
+<li>That's it! You now have a VMware friendly OVA that you can import into ESXi (or Workstation, etc)</li>
+</ol>
 </div>
 <div class="section" id="ansible">
 <h5>Ansible</h5>
@@ -254,7 +325,7 @@ automated VM configuration and management.</p>
                 <div class="span3 well sidebar-nav" id="sidebar">
 <ul class="nav nav-list">
 <li class="nav-header"><h4><i class="icon-external-link"></i>blogroll</h4></li>
-    <li><a href="https://github.com/hack_char"><i class="icon-external-link"></i>Hack Char @ GitHub</a></li>
+    <li><a href="https://github.com/hack-char"><i class="icon-external-link"></i>Hack Char @ GitHub</a></li>
 <li class="nav-header"><h4><i class="icon-home icon-large"></i> social</h4></li>
 <li><a href="https://hack-char.github.io/" rel="alternate"><i class="icon-bookmark icon-large"></i>atom feed</a></li>
     <li><a href="https://twitter.com/@Hack_Char"><i class="icon-Hack Char @ Twitter-sign icon-large"></i>Hack Char @ Twitter</a></li>
