@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>VMware vSphere How To</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Char">
+
+    <!-- Le styles -->
+    <link rel="stylesheet" href="https://hack-char.github.io/theme/css/bootstrap.dark.css" type="text/css" />
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+      .tag-1 {
+        font-size: 20pt;
+      }
+      .tag-2 {
+        font-size: 17pt;
+      }
+      .tag-3 {
+        font-size: 14pt;
+      }
+      .tag-4 {
+        font-size: 12pt;
+     }
+    </style>
+    <link href="https://hack-char.github.io/theme/css/bootstrap-responsive.dark.css" rel="stylesheet">
+        <link href="https://hack-char.github.io/theme/css/font-awesome.css" rel="stylesheet">
+
+    <link href="https://hack-char.github.io/theme/css/pygments.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="https://hack-char.github.io/theme/images/favicon.ico">
+    <link rel="apple-touch-icon" href="https://hack-char.github.io/theme/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://hack-char.github.io/theme/images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://hack-char.github.io/theme/images/apple-touch-icon-114x114.png">
+
+    <link href="https://hack-char.github.io/" type="application/atom+xml" rel="alternate" title="Hack Char ATOM Feed" />
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="https://hack-char.github.io/index.html">Hack Char </a>
+          <div class="nav-collapse">
+            <ul class="nav">
+                          <li class="divider-vertical"></li>
+                  <li class="active">
+                    <a href="https://hack-char.github.io/category/cloud.html">
+						<i class="icon-folder-open icon-large"></i>cloud
+					</a>
+                  </li>
+
+                          <ul class="nav pull-right">
+                                <li><a href="https://hack-char.github.io/archives.html"><i class="icon-th-list"></i>Archives</a></li>
+                          </ul>
+
+            </ul>
+            <!--<p class="navbar-text pull-right">Logged in as <a href="#">username</a></p>-->
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="span9" id="content">
+<section id="content">
+        <article>
+                <header>
+                        <h1>
+                                <a href=""
+                                        rel="bookmark"
+                                        title="Permalink to VMware vSphere How To">
+                                        VMware vSphere How To
+                                </a>
+                        </h1>
+                </header>
+                <div class="entry-content">
+                <div class="well">
+<footer class="post-info">
+<span class="label">Date</span>
+<abbr class="published" title="2018-03-17T00:00:00-07:00">
+        <i class="icon-calendar"></i>Sat 17 March 2018
+</abbr>
+<span class="label">By</span>
+<a href="https://hack-char.github.io/author/char.html"><i class="icon-user"></i>Char</a>
+<span class="label">Category</span>
+<a href="https://hack-char.github.io/category/cloud.html"><i class="icon-folder-open"></i>cloud</a>.
+
+
+<span class="label">Tags</span>
+	<a href="https://hack-char.github.io/tag/vm.html"><i class="icon-tag"></i>vm</a>
+	<a href="https://hack-char.github.io/tag/vmware.html"><i class="icon-tag"></i>vmware</a>
+</footer><!-- /.post-info -->                </div>
+                <div class="section" id="summary">
+<h2>Summary</h2>
+<p>Most people that are familiar with cloud and virtualization have heard of VMware. However, many are not
+familiar with the VMware bare-metal hypervisor ESXi nor it's vSphere/vCenter management interfaces. This
+blog entry will help describe how to start using and learning about it.</p>
+<p>The terms ESXi and vSphere are used interchangably (like the VMware webpage), however, they are
+differnt things. The term vSphere refers to the various management interfaces of the ESXi bare-metal
+hypervisor.</p>
+<p>Fun Fact: ESX, the predecessor of ESXi, used a Linux kernel.</p>
+<div class="section" id="background">
+<h3>Background</h3>
+<p>This is written based on some experience attempting to learn about vSphere and ESXi. An important thing
+to note at the beginning is that the latest version of ESXi will <em>NOT</em> run on <em>MOST</em> hardware. It's strictly
+limited to drivers that support the latest and greatest hardware available. That limits what VMware has to
+support and potentially makes ESXi <cite>better</cite> from the standpoint of not requiring too much old hardware backward
+compatibility. It does make it a real pain to play with for a home user. However, it runs perfectly fine in a
+Qemu virtual machine. And Qemu runs on Linux which can be installed on just about any hardware you have.</p>
+<p><strong>:) Linux :)</strong></p>
+<p>Also, you can get started right away with the free version of ESXi and even use the 60-day trial vSphere
+and vCenter products. If you are lucky enough to have hardware that will run ESXi directly, you likely don't
+want to keep re-installing it every 60 days. Assuming you're using it for personal use, you can get a complete
+set of VMware licenses for ~$200/yr by joining VMUG VMware User's Group.</p>
+<p>This How To is using examples running on a machine with an Intel Core i7 and 32GB RAM. If you have less
+than 12GB RAM, you won't be running the vCenter virtual machine as that VM requires 10GB. You can try using a very
+large swap partition, but expect it to be <em>PAINFULLY SLOW</em>.</p>
+</div>
+</div>
+<div class="section" id="lab">
+<h2>Lab</h2>
+<p>ESXi is the hypervisor and you might think the first step is to install it. You would be <strong>wrong</strong>.
+The VMware ecosystem expects an enterprise environment where there is <cite>DNS</cite>, <cite>DHCP</cite> and <cite>NTP</cite> servers running. It
+integrates really well in a Windows Server environment, but this makes it a bit of a pain for a home user to
+start using it.</p>
+<p>I chose to spin up a base Debian server with BIND, DHCP and NTP running on it and then serving these to my local VMs.
+Using <a class="reference external" href="https://hack-char.github.io/qs.html">QS (Qemu Script)</a> it is currently taking up 2% of one CPU core and 360MB RAM on my laptop.
+There's many ways to do this, such as using dns-masq, /etc/hosts, and so forth. Your first mission will be to supply
+these services to your lab environment.</p>
+<p>This example will walk through installing the vCenter Server Appliance VCSA (a VM), on top of an ESXi hypervisor, along
+with three more ESXi virtual machines. Decide on how many instances of ESXi you would like to run as well as vCenter.
+Each will need an IP address and should be resolvable. The vCenter VM will need 10GB RAM and the ESXi will be allocated
+12GB (including the 10GB for the underlying VCSA VM).
+Further down we will make four ESXi instances, two with 12GB and two with 4GB RAM. This in the end required also
+using swap space on my machine that has 32GB memory.</p>
+<p>I've found that using ZFS with LZ4 compression to make my virtual machine life <strong>significantly</strong> better. If you
+don't have some method of using a compressed filesystem, expect you will be using a tremendous amount of space.
+I allocated 500GB for ESXi 1 and 100GB for ESXi 2 through ESXi 4 for a total of 800GB. This will work for the
+examples below, but will severely limit how many VMs you can load. Using ZFS with LZ4 compression, the amount
+of underlying disk space I used is 28GB total. Using compressed disk space is likely one reason it took ~1 hour
+to let vCenter install.</p>
+</div>
+<div class="section" id="installing-esxi">
+<h2>Installing ESXi</h2>
+<ol class="arabic">
+<li><p class="first">Make the underlying storage for the first ESXi instance ESXi1.</p>
+<p><code>qemu-img create -f raw esxi1.raw 500GB</code></p>
+</li>
+<li><p class="first">Create the QS definition for esxi1</p>
+<p><code>${HOME}/.qs/esxi1.conf</code></p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span>vm esxi1
+     cores 2
+     mem 12
+     internet 10.1.1.155
+     image /rpool1/vm/esxi1.raw
+     raw
+     cpu host
+</pre></div>
+<p>You will need to specify the actual path to the storage file you created in step 1 as my <code>/rpool1/vm</code> path is
+unlikely to be yours. If you made a qcow2 image, do not include <code>raw</code>. You will have to include <code>cpu host</code>
+otherwise ESXi won't install. You could also include <code>vnc &lt;password&gt;</code> if you want to run headless normally and
+just connect using VNC (for example using tightvnc). Also <code>mute true</code> would disable the ALSA audio for this VM
+which would be appropriate in this case.</p>
+<ol class="arabic" start="3">
+<li><p class="first">Install the hypervisor using</p>
+<p><code>qs up esxi1 bootonce /var/iso/VMware-VMvisor-Installer-6.5.0.update01-5969303.x86_64.iso</code></p>
+<p>You will need to interact with the VM and choose appropriate options as you go.</p>
+</li>
+<li><p class="first">Initial screens as the ISO boots.</p>
+</li>
+</ol>
+<div class="figure">
+<object data="/cloud/vmware/esxi/esxi1.svg" type="image/svg+xml">
+first screen installing ESXi</object>
+<p class="caption">First screen of nineteen when installing ESXi.</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 2" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-44-59.png" style="width: 80%;" />
+<p class="caption">2/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 3" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-23.png" style="width: 80%;" />
+<p class="caption">3/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 4" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-42.png" style="width: 80%;" />
+<p class="caption">4/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 5" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-51.png" style="width: 80%;" />
+<p class="caption">5/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 6" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-59.png" style="width: 80%;" />
+<p class="caption">6/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 7" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-37.png" style="width: 80%;" />
+<p class="caption">7/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 8" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-44.png" style="width: 80%;" />
+<p class="caption">8/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 9" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-51.png" style="width: 80%;" />
+<p class="caption">9/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 10" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-18.png" style="width: 80%;" />
+<p class="caption">10/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 11" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-27.png" style="width: 80%;" />
+<p class="caption">11/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 12" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-52.png" style="width: 80%;" />
+<p class="caption">12/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 13" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-05.png" style="width: 80%;" />
+<p class="caption">13/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 14" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-19.png" style="width: 80%;" />
+<p class="caption">14/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 15" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-33.png" style="width: 80%;" />
+<p class="caption">15/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 16" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-54-45.png" style="width: 80%;" />
+<p class="caption">16/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 17" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-55-16.png" style="width: 80%;" />
+<p class="caption">17/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 18" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-55-27.png" style="width: 80%;" />
+<p class="caption">18/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 19" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-58-16.png" style="width: 80%;" />
+<p class="caption">19/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 20" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-58-38.png" style="width: 80%;" />
+<p class="caption">20/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 21" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-59-12.png" style="width: 80%;" />
+<p class="caption">21/22</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<img alt="screen 22" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-59-30.png" style="width: 80%;" />
+<p class="caption">22/22</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="multiple-esxi">
+<h3>Multiple ESXi</h3>
+<p>Go ahead and make copies of the storage file you just created for esxi1. Alternately you can create smaller files in the
+100GB range and install again. If you make copies, be prepared to:</p>
+<ol class="arabic">
+<li><p class="first">Delete and re-create your storage in each VM. You can select VMFS6 instead of the default VMFS5. This is necessary if you
+want to connect this ESXi to vCenter. Otherwise the storage on each ESXi will have the same UUID and will conflict as you
+add it to vCenter.</p>
+</li>
+<li><p class="first">Assign a unique IP address to each ESXi. I chose to use static IP addresses. If you want to use DHCP, you'll need to
+apply a uniquely defined ethernet MAC to each QS vm description</p>
+<p><code>ether 11:22:33:44:55:66</code></p>
+<p>Also specify the IP to be assigned by your DHCP server such that the name is resolved correctly. I chose to use
+esxi1.local, esxi2.local, esxi3.local and esxi4.local.</p>
+</li>
+<li><p class="first">... start over? There's at least one gotcha where even though you change the IP using the web UI, it doesn't change everywhere.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="installing-vcenter">
+<h2>Installing vCenter</h2>
+<p>Remember: <em>BE PATIENT</em></p>
+<p>If you interrupt the installation process of the VM, it will not work and you will need to delete it and start over.</p>
+<ol class="arabic simple">
+<li>I hate running executables from other companies when I shouldn't have to. So I refused to use the executable with the VCSA ISO.
+I extracted <code>VMware-vCenter-Server-Appliance-6.5.0.10000-5973321_OVF10.ova</code> from the installation ISO and then imported that into
+ESXi 1.</li>
+<li><em>BE PATIENT</em>. You'll see a number of different changes in the console as VCSA is being booted and running its never-ending
+installation scripts. <em>DO NOT MESS WITH IT</em>. <em>IF YOU MESS WITH IT YOU WILL BE DELETING IT AND STARTING OVER</em>.</li>
+</ol>
+<hr class="docutils" />
+<div class="figure">
+<object data="/cloud/vmware/vcenter1.svg" type="image/svg+xml">
+First vCenter installation screen</object>
+<p class="caption">Initial console view inside the vSphere Web UI showing the VCSA installation beginning. (1/5)</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<object data="/cloud/vmware/vcenter2.svg" type="image/svg+xml">
+Second vCenter installation screen</object>
+<p class="caption">Next vCenter installation screen. (2/5)</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<object data="/cloud/vmware/vcenter3.svg" type="image/svg+xml">
+Third vCenter installation screen</object>
+<p class="caption">(3/5)</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<object data="/cloud/vmware/vcenter4.svg" type="image/svg+xml">
+Fourth vCenter installation screen</object>
+<p class="caption">(4/5)</p>
+</div>
+<hr class="docutils" />
+<div class="figure">
+<object data="/cloud/vmware/vcenter5.svg" type="image/svg+xml">
+Fifth vCenter installation screen</object>
+<p class="caption">(5/5)</p>
+</div>
+<hr class="docutils" />
+<ol class="arabic" start="3">
+<li><p class="first">When you see this screen showing it was assigned a DHCP address (even if you manually chose an IP address to assign it), you
+are ready to log into it. You'll need to log in on the console the first time to set the root password. It will not require a default
+at this point but step you through a 2-step verification of a new root password.</p>
+<p>If you want to be sporty and see what the heck it is doing before this screen, you can log in using the pre-default 'vmware' password
+for root. But be warned, you will probably mess something up and have to re-install <em>again</em>. I installed this thing a million times.</p>
+</li>
+</ol>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-47-52.png" style="width: 800px;" />
+<hr class="docutils" />
+<ol class="arabic simple" start="4">
+<li>When you are at this point, you can finally open the web interface of the VCSA VM. <em>If you're using QS</em>, be warned, you will need
+to add the IP or IP range that this VCSA VM has to the NFTables trusted_ip set. If you don't then it will block this IP and you won't
+be happy. You will be :( or at best :|</li>
+</ol>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-17.png" style="width: 800px;" />
+<hr class="docutils" />
+<ol class="arabic simple" start="5">
+<li>Yet more installation screens. Yes, you thought you were done installing VCSA, but <strong>YOU WERE NOT!</strong> Follow through the rest of these
+installation screens to let it kick off yet more scripts. It is important to fill in and remember the Single Sign On (SSO) set up
+as you will need to enter the <a class="reference external" href="mailto:'administrator&#64;some.sso">'administrator&#64;some.sso</a>' as your username at the final, real web interface.</li>
+</ol>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-38.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-55-07.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-56-48.png" style="width: 800px;" />
+<hr class="docutils" />
+<ol class="arabic simple" start="6">
+<li>I found that this entire process of installing VCSA took be about one hour. Most of which is just spent waiting for the
+darn scripts to run. When it's finally done, you can log in and see all the glory that is vCenter.</li>
+</ol>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-00-28.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-02-46.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-07-42.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-14-06.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-18-49.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-20-34.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-03.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-31.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-26-15.png" style="width: 800px;" />
+</div>
+<hr class="docutils" />
+<div class="section" id="attaching-esxi-hosts-to-vcenter">
+<h2>Attaching ESXi Hosts to vCenter</h2>
+<p>It might seem strange, but you can attach the hosting ESXi instance to vCenter running inside it. It works just fine. Furthermore,
+after I attached all four ESXi instances, I then performed a  migration while vCenter was running from esxi1 to esxi4.</p>
+<p>It took a really long time, however, the VM kept running throughout the process! Thats the primary benefit I've seen to using vCenter
+and managing a larger pool of ESXi hosts. In addition, you won't need to manually log in to however many ESXi you have, just to the single
+vCenter instance when managing your VMware cloud. Also it allows for High Availability and fault tolerance.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-30-03.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-31-16.png" style="width: 800px;" />
+<hr class="docutils" />
+<div class="section" id="migrating-a-vm-using-vmotion">
+<h3>Migrating a VM using vMotion</h3>
+<p>To migrate a VM, you'll use 'vMotion'. You must enable 'vMotion' on the sending and receiving ESXi hosts. Then it's simply a matter of
+right-clicking and choosing to migrate. You can choose to migrate the storage or just the execution. In this example both storage and
+execution were migrated. You can see how at the very end the actual execution was migrated such that the running VM was not disrupted.</p>
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-56-57.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-58-44.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-06-34.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-10-18.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-15-21.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-17-47.png" style="width: 800px;" />
+<hr class="docutils" />
+<img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-19-13.png" style="width: 800px;" />
+</div>
+<hr class="docutils" />
+<div class="section" id="making-a-new-vm">
+<h3>Making a new VM</h3>
+<p>There's a nice interface on ESXi to help you create new VMs. I however, like Qemu and my QS tool and want to use VMs I made there inside
+of ESXi. It's not that tough...</p>
+<ol class="arabic">
+<li><p class="first">Make a 'dummy' VM in ESXi. Follow the prompts and make a VM that corresponds with the Linux flavor you actually want. Make sure to
+choose 'lsilogic' as the storage adapter.</p>
+</li>
+<li><p class="first">Export that VM and you'll get a VMDK and OVF file on your local machine.</p>
+</li>
+<li><p class="first">Convert your Qemu storage image from either qcow2 or raw to VMDK. <em>THIS IS IMPORTANT</em>. You must include the following option on the
+<cite>qemu-img</cite> convert utility to make the VMDK a <cite>streamOptimized</cite> flavor of VMDK. ESXi just doesn't like the default that qemu-img spits out.</p>
+<p><code>qemu-img convert -O vmdk /rpool1/vm/deb.raw -o adapter_type=lsilogic,subformat=streamOptimized,compat6 deb.vmdk</code></p>
+<p>The important bit is <code>-o adapter_type=lsilogic,subformat=streamOptimized,compat6</code>.</p>
+</li>
+<li><p class="first">Update your OVF file to point to this VMDK you just made and make any other modifications you might want.</p>
+</li>
+<li><p class="first">Use tar to make your OVA and include the OVF before your VMDK.</p>
+</li>
+<li><p class="first">That's it! You now have a VMware friendly OVA that you can import into ESXi (or Workstation, etc)</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="ansible">
+<h2>Ansible</h2>
+<p>For extra credit... I have not yet done this. There are modules for ansible that can communicate with your ESXi hosts allowing for
+automated VM configuration and management.</p>
+</div>
+
+                </div><!-- /.entry-content -->
+        </article>
+</section>
+        </div><!--/span-->
+
+                <div class="span3 well sidebar-nav" id="sidebar">
+<ul class="nav nav-list">
+<li class="nav-header"><h4><i class="icon-external-link"></i>blogroll</h4></li>
+    <li><a href="https://github.com/hack-char"><i class="icon-external-link"></i>Hack Char @ GitHub</a></li>
+<li class="nav-header"><h4><i class="icon-home icon-large"></i> social</h4></li>
+<li><a href="https://hack-char.github.io/" rel="alternate"><i class="icon-bookmark icon-large"></i>atom feed</a></li>
+    <li><a href="https://twitter.com/@Hack_Char"><i class="icon-Hack Char @ Twitter-sign icon-large"></i>Hack Char @ Twitter</a></li>
+
+<li class="nav-header"><h4><i class="icon-folder-close icon-large"></i>Categories</h4></li>
+<li>
+<a href="https://hack-char.github.io/category/cloud.html">
+    <i class="icon-folder-open icon-large"></i>cloud
+</a>
+</li>
+
+<li class="nav-header"><h4><i class="icon-tags icon-large"></i>Tags</h4></li>
+
+
+</ul>        </div><!--/.well -->
+
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <address id="about">
+                Proudly powered by <a href="http://pelican.notmyidea.org/">Pelican <i class="icon-external-link"></i></a>,
+                                which takes great advantage of <a href="http://python.org">Python <i class="icon-external-link"></i></a>.
+        </address><!-- /#about -->
+
+        <p>The theme is based on <a href="http://twitter.github.com/bootstrap/">Bootstrap from Twitter <i class="icon-external-link"></i></a>,
+                   and <a href="http://fortawesome.github.com/Font-Awesome/">Font-Awesome <i class="icon-external-link"></i></a>, thanks!</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
+
+
+
+    <!-- Le javascript -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://hack-char.github.io/theme/js/jquery-1.7.2.min.js"></script>
+    <script src="https://hack-char.github.io/theme/js/bootstrap.min.js"></script>
+  </body>
+</html>
