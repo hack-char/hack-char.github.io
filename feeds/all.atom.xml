@@ -1,5 +1,500 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Hack Char</title><link href="https://hack-char.github.io/" rel="alternate"></link><link href="https://hack-char.github.io/feeds/all.atom.xml" rel="self"></link><id>https://hack-char.github.io/</id><updated>2018-03-24T00:00:00-07:00</updated><entry><title>Qemu Script</title><link href="https://hack-char.github.io/qs.html" rel="alternate"></link><published>2018-03-17T00:00:00-07:00</published><updated>2018-03-24T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-03-17:/qs.html</id><summary type="html">&lt;p class="first last"&gt;Configuration and Bash script to make Qemu easy to use.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Hack Char</title><link href="https://hack-char.github.io/" rel="alternate"></link><link href="https://hack-char.github.io/feeds/all.atom.xml" rel="self"></link><id>https://hack-char.github.io/</id><updated>2018-06-23T00:00:00-07:00</updated><entry><title>PKI Introduction and Use</title><link href="https://hack-char.github.io/pki.html" rel="alternate"></link><published>2018-06-23T00:00:00-07:00</published><updated>2018-06-23T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-06-23:/pki.html</id><summary type="html">&lt;p class="first last"&gt;What is PKI and how to set it up&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="summary"&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Public Key Infrastructure (PKI) is a common authentication mechanism. Instead of knowing a secret like a password
+or PIN, it relies on a trusted entity pre-authenticating others and using public key cryptography to provide
+proof of authentication. The most common example would be secure web traffic over TLS. Another is using
+client certificates to log in to services such as a VPN.&lt;/p&gt;
+&lt;p&gt;While Microsoft Windows Server comes with PKI applications, this discussion will focus on Linux and free
+alternatives - specifically OpenSSL.&lt;/p&gt;
+&lt;div class="section" id="background"&gt;
+&lt;h3&gt;Background&lt;/h3&gt;
+&lt;div class="figure align-center"&gt;
+&lt;img alt="CA Architecture" src="/security/figure/CA.png" /&gt;
+&lt;/div&gt;
+&lt;p&gt;Certificate Authority Architecture&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;Who do you trust? To start with, you must be trust the manufacturer of your computer. Also whover made your
+operating system, browser, and everyone they trust. Take a look at the long list of Certificate Authorities (CA)
+that come preloaded at each step. Do you trust that foreign CA? Do you need to? If not, why enable it? The usual answer
+is convenience.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="process"&gt;
+&lt;h3&gt;Process&lt;/h3&gt;
+&lt;p&gt;The CA generates a public &amp;amp; private key pair on a very secure system. When not being used this should be stored
+physically offline somewhere safe. By various standards, it's actually stored in a Hardware Security Module (HSM). A
+self-signed certificate is generated for this root CA key pair. This certificate is widely distributed and the thing
+that everyone trusts.&lt;/p&gt;
+&lt;p&gt;Unless you're setting up PKI for an extremely small group, you never use the CA key pair in normal operation. The
+reason is there's no method to easily invalidate this CA certificate. You would need to have all users manually do that
+or rely on your IT automation. Of course, if that relied on PKI, you're back to manually doing this on all machines.&lt;/p&gt;
+&lt;p&gt;One or more 'intermediate' CA key pairs and certificates are generated. These are signed by the root CA and have
+delegated CA privileges. Perhaps one per physical location or type of certificates it will sign. Maybe a special one
+to generate Certificate Revocation Lists (CRLs). If you're up to a challenge it could be tied into an Online Certificate
+Status Protocal (OCSP) server.&lt;/p&gt;
+&lt;p&gt;These intermediate CAs then validate and sign individual certifictes for others. In most cases it is fully automated
+(see Automated Certificate Management Environment ACME). For small groups it would still be mostly manual. It is not
+too difficult to configure and script for a small group - the use case we will be discussing. Furthermore the examples
+here will not include this level of intermediate CAs to keep it less complicated.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="key-generation"&gt;
+&lt;h3&gt;Key Generation&lt;/h3&gt;
+&lt;p&gt;If doing this 'for real' make sure you are generating good keys! Generating a key within a VM is not a good idea.
+The amount of entropy you get from a VM instance is questionable as well as the source of that entropy. It is highly
+recommended to use a local machine disconnected from the network to generate your keys. Preferably with 'rng-tools'
+installed and entropy gathered from your TPM or CPU hardware extended functionality.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="future"&gt;
+&lt;h3&gt;Future&lt;/h3&gt;
+&lt;p&gt;Why use PKI and CAs? This is so convoluted! A good alternative that has been proposed is to distribute web page
+certificates (actually just the public key) over DNS.
+Each user is already trusting their DNS to respond with the correct IP address, or a man-in-the-middle
+attack becomes much easier. Using DNSSEC and trusted DNS servers it would be reasonable to distribute both CRLs
+and certificates. Take a look at RFC 4438 (February 2006). I expect this hasn't become a standard yet since too much
+money has been poured into CAs and their tight relationships to browsers and operating systems. A different standard
+'DANE' RFC 6698 was proposed in August of 2012. It also has not gained traction of major browser developers. Is this
+because of inertia, kickbacks from CAs to browsers distributing their certificate, or something else?
+For non-savvy users DANE could be a problem. It would mean whoever controls your DNS now can potentially spy and
+man-in-the-middle your 'secure' web connections. As for most this is an ISP or other corporation, you're really just
+trusting a different set of actors.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="configure-and-use-openssl-certificate-authority"&gt;
+&lt;h2&gt;Configure and Use OpenSSL Certificate Authority&lt;/h2&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Using your favorite Linux distibution, install the OpenSSL package.
+This example will be specific to Debian, but mostly carry over to others.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt install openssl&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;You can use the default configurations that come with this package. I will
+be describing a stripped down set to get you up and running quickly.
+We're going to use a separate directory to keep all our modified files in one
+place. This requires setting the environment variable OPENSSL_CONF=/var/ca/openssl.cnf
+This is the directory structure we will be using:&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/var/ca/openssl.cnf            - configuration file
+/var/ca                        - root of the CA
+       ./newcerts/             - where new certs are kept
+       ./private/ca_key.pem    - where we keep our private key
+       ./cacert.pem            - our CA cert
+       ./index.txt             - index of certs signed
+       ./crlnumber             - CRL number of the current crl
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic" start="3"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Generate CA public/private key&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl genrsa -out /var/ca/private/ca_key.pem 4096&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make CA certificate&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl req -x509 -out /var/ca/cacert.pem&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;For advanced use... Try setting up your own OSCP responder:
+&lt;a class="reference external" href="http://isrlabs.net/wordpress/?p=169"&gt;http://isrlabs.net/wordpress/?p=169&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="distributing-and-using-your-ca-certificate"&gt;
+&lt;h2&gt;Distributing and Using your CA Certificate&lt;/h2&gt;
+&lt;p&gt;To install in Firefox:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Preferences -&amp;gt; Advanced -&amp;gt; Certificates -&amp;gt; View Certificates&lt;/li&gt;
+&lt;li&gt;Import. Choose your ''cacert.pem'' file.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="section" id="set-up-apache-with-your-certificate"&gt;
+&lt;h2&gt;Set up Apache with your Certificate&lt;/h2&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;If Apache is not already installed:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt install apache2&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Generate your public/private key&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl genrsa /etc/ssl/private/apache.key 4096&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make a Certificate Signing Request&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl req -new -key /etc/ssl/private/apache.key -out apache.csr&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Send CSR to CA and get it signed&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl ca -in ./apache.csr out ./apache.crt&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Install certificate in apache and configure apache&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;For advanced use... Try stapling OSCP responses from Apache:
+&lt;a class="reference external" href="https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html"&gt;https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="pki"></category><category term="security"></category></entry><entry><title>VMware vSphere How To</title><link href="https://hack-char.github.io/esxi.html" rel="alternate"></link><published>2018-03-17T00:00:00-07:00</published><updated>2018-03-24T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-03-17:/esxi.html</id><summary type="html">&lt;p class="first last"&gt;Installing and using VMware vSphere in a lab environment&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="summary"&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Most people that are familiar with cloud and virtualization have heard of VMware. However, many are not
+familiar with the VMware bare-metal hypervisor ESXi nor it's vSphere/vCenter management interfaces. This
+blog entry will help describe how to start using and learning about it.&lt;/p&gt;
+&lt;p&gt;The terms ESXi and vSphere are used interchangably (like the VMware webpage), however, they are
+differnt things. The term vSphere refers to the various management interfaces of the ESXi bare-metal
+hypervisor.&lt;/p&gt;
+&lt;p&gt;Fun Fact: ESX, the predecessor of ESXi, used a Linux kernel.&lt;/p&gt;
+&lt;div class="section" id="background"&gt;
+&lt;h3&gt;Background&lt;/h3&gt;
+&lt;p&gt;This is written based on some experience attempting to learn about vSphere and ESXi. An important thing
+to note at the beginning is that the latest version of ESXi will &lt;em&gt;NOT&lt;/em&gt; run on &lt;em&gt;MOST&lt;/em&gt; hardware. It's strictly
+limited to drivers that support the latest and greatest hardware available. That limits what VMware has to
+support and potentially makes ESXi &lt;cite&gt;better&lt;/cite&gt; from the standpoint of not requiring too much old hardware backward
+compatibility. It does make it a real pain to play with for a home user. However, it runs perfectly fine in a
+Qemu virtual machine. And Qemu runs on Linux which can be installed on just about any hardware you have.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;:) Linux :)&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Also, you can get started right away with the free version of ESXi and even use the 60-day trial vSphere
+and vCenter products. If you are lucky enough to have hardware that will run ESXi directly, you likely don't
+want to keep re-installing it every 60 days. Assuming you're using it for personal use, you can get a complete
+set of VMware licenses for ~$200/yr by joining VMUG VMware User's Group.&lt;/p&gt;
+&lt;p&gt;This How To is using examples running on a machine with an Intel Core i7 and 32GB RAM. If you have less
+than 12GB RAM, you won't be running the vCenter virtual machine as that VM requires 10GB. You can try using a very
+large swap partition, but expect it to be &lt;em&gt;PAINFULLY SLOW&lt;/em&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="lab"&gt;
+&lt;h2&gt;Lab&lt;/h2&gt;
+&lt;p&gt;ESXi is the hypervisor and you might think the first step is to install it. You would be &lt;strong&gt;wrong&lt;/strong&gt;.
+The VMware ecosystem expects an enterprise environment where there is &lt;cite&gt;DNS&lt;/cite&gt;, &lt;cite&gt;DHCP&lt;/cite&gt; and &lt;cite&gt;NTP&lt;/cite&gt; servers running. It
+integrates really well in a Windows Server environment, but this makes it a bit of a pain for a home user to
+start using it.&lt;/p&gt;
+&lt;p&gt;I chose to spin up a base Debian server with BIND, DHCP and NTP running on it and then serving these to my local VMs.
+Using &lt;a class="reference external" href="https://hack-char.github.io/qs.html"&gt;QS (Qemu Script)&lt;/a&gt; it is currently taking up 2% of one CPU core and 360MB RAM on my laptop.
+There's many ways to do this, such as using dns-masq, /etc/hosts, and so forth. Your first mission will be to supply
+these services to your lab environment.&lt;/p&gt;
+&lt;p&gt;This example will walk through installing the vCenter Server Appliance VCSA (a VM), on top of an ESXi hypervisor, along
+with three more ESXi virtual machines. Decide on how many instances of ESXi you would like to run as well as vCenter.
+Each will need an IP address and should be resolvable. The vCenter VM will need 10GB RAM and the ESXi will be allocated
+12GB (including the 10GB for the underlying VCSA VM).
+Further down we will make four ESXi instances, two with 12GB and two with 4GB RAM. This in the end required also
+using swap space on my machine that has 32GB memory.&lt;/p&gt;
+&lt;p&gt;I've found that using ZFS with LZ4 compression to make my virtual machine life &lt;strong&gt;significantly&lt;/strong&gt; better. If you
+don't have some method of using a compressed filesystem, expect you will be using a tremendous amount of space.
+I allocated 500GB for ESXi 1 and 100GB for ESXi 2 through ESXi 4 for a total of 800GB. This will work for the
+examples below, but will severely limit how many VMs you can load. Using ZFS with LZ4 compression, the amount
+of underlying disk space I used is 28GB total. Using compressed disk space is likely one reason it took ~1 hour
+to let vCenter install.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="installing-esxi"&gt;
+&lt;h2&gt;Installing ESXi&lt;/h2&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make the underlying storage for the first ESXi instance ESXi1.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;qemu-img create -f raw esxi1.raw 500GB&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Create the QS definition for esxi1&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;${HOME}/.qs/esxi1.conf&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;vm esxi1
+     cores 2
+     mem 12
+     internet 10.1.1.155
+     image /rpool1/vm/esxi1.raw
+     raw
+     cpu host
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You will need to specify the actual path to the storage file you created in step 1 as my &lt;code&gt;/rpool1/vm&lt;/code&gt; path is
+unlikely to be yours. If you made a qcow2 image, do not include &lt;code&gt;raw&lt;/code&gt;. You will have to include &lt;code&gt;cpu host&lt;/code&gt;
+otherwise ESXi won't install. You could also include &lt;code&gt;vnc &amp;lt;password&amp;gt;&lt;/code&gt; if you want to run headless normally and
+just connect using VNC (for example using tightvnc). Also &lt;code&gt;mute true&lt;/code&gt; would disable the ALSA audio for this VM
+which would be appropriate in this case.&lt;/p&gt;
+&lt;ol class="arabic" start="3"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Install the hypervisor using&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;qs up esxi1 bootonce /var/iso/VMware-VMvisor-Installer-6.5.0.update01-5969303.x86_64.iso&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;You will need to interact with the VM and choose appropriate options as you go.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Initial screens as the ISO boots.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/esxi/esxi1.svg" type="image/svg+xml"&gt;
+first screen installing ESXi&lt;/object&gt;
+&lt;p class="caption"&gt;First screen of nineteen when installing ESXi.&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 2" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-44-59.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;2/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 3" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-23.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;3/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 4" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-42.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;4/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 5" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-51.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;5/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 6" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-59.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;6/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 7" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-37.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;7/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 8" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-44.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;8/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 9" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-51.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;9/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 10" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-18.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;10/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 11" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-27.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;11/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 12" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-52.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;12/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 13" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-05.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;13/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 14" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-19.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;14/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 15" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-33.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;15/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 16" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-54-45.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;16/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 17" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-55-16.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;17/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 18" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-55-27.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;18/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 19" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-58-16.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;19/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 20" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-58-38.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;20/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 21" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-59-12.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;21/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 22" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-59-30.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;22/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="multiple-esxi"&gt;
+&lt;h3&gt;Multiple ESXi&lt;/h3&gt;
+&lt;p&gt;Go ahead and make copies of the storage file you just created for esxi1. Alternately you can create smaller files in the
+100GB range and install again. If you make copies, be prepared to:&lt;/p&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Delete and re-create your storage in each VM. You can select VMFS6 instead of the default VMFS5. This is necessary if you
+want to connect this ESXi to vCenter. Otherwise the storage on each ESXi will have the same UUID and will conflict as you
+add it to vCenter.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Assign a unique IP address to each ESXi. I chose to use static IP addresses. If you want to use DHCP, you'll need to
+apply a uniquely defined ethernet MAC to each QS vm description&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;ether 11:22:33:44:55:66&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Also specify the IP to be assigned by your DHCP server such that the name is resolved correctly. I chose to use
+esxi1.local, esxi2.local, esxi3.local and esxi4.local.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;... start over? There's at least one gotcha where even though you change the IP using the web UI, it doesn't change everywhere.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="installing-vcenter"&gt;
+&lt;h2&gt;Installing vCenter&lt;/h2&gt;
+&lt;p&gt;Remember: &lt;em&gt;BE PATIENT&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;If you interrupt the installation process of the VM, it will not work and you will need to delete it and start over.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;I hate running executables from other companies when I shouldn't have to. So I refused to use the executable with the VCSA ISO.
+I extracted &lt;code&gt;VMware-vCenter-Server-Appliance-6.5.0.10000-5973321_OVF10.ova&lt;/code&gt; from the installation ISO and then imported that into
+ESXi 1.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;BE PATIENT&lt;/em&gt;. You'll see a number of different changes in the console as VCSA is being booted and running its never-ending
+installation scripts. &lt;em&gt;DO NOT MESS WITH IT&lt;/em&gt;. &lt;em&gt;IF YOU MESS WITH IT YOU WILL BE DELETING IT AND STARTING OVER&lt;/em&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter1.svg" type="image/svg+xml"&gt;
+First vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;Initial console view inside the vSphere Web UI showing the VCSA installation beginning. (1/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter2.svg" type="image/svg+xml"&gt;
+Second vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;Next vCenter installation screen. (2/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter3.svg" type="image/svg+xml"&gt;
+Third vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;(3/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter4.svg" type="image/svg+xml"&gt;
+Fourth vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;(4/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter5.svg" type="image/svg+xml"&gt;
+Fifth vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;(5/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic" start="3"&gt;
+&lt;li&gt;&lt;p class="first"&gt;When you see this screen showing it was assigned a DHCP address (even if you manually chose an IP address to assign it), you
+are ready to log into it. You'll need to log in on the console the first time to set the root password. It will not require a default
+at this point but step you through a 2-step verification of a new root password.&lt;/p&gt;
+&lt;p&gt;If you want to be sporty and see what the heck it is doing before this screen, you can log in using the pre-default 'vmware' password
+for root. But be warned, you will probably mess something up and have to re-install &lt;em&gt;again&lt;/em&gt;. I installed this thing a million times.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-47-52.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic simple" start="4"&gt;
+&lt;li&gt;When you are at this point, you can finally open the web interface of the VCSA VM. &lt;em&gt;If you're using QS&lt;/em&gt;, be warned, you will need
+to add the IP or IP range that this VCSA VM has to the NFTables trusted_ip set. If you don't then it will block this IP and you won't
+be happy. You will be :( or at best :|&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-17.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic simple" start="5"&gt;
+&lt;li&gt;Yet more installation screens. Yes, you thought you were done installing VCSA, but &lt;strong&gt;YOU WERE NOT!&lt;/strong&gt; Follow through the rest of these
+installation screens to let it kick off yet more scripts. It is important to fill in and remember the Single Sign On (SSO) set up
+as you will need to enter the &lt;a class="reference external" href="mailto:'administrator&amp;#64;some.sso"&gt;'administrator&amp;#64;some.sso&lt;/a&gt;' as your username at the final, real web interface.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-38.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-55-07.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-56-48.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic simple" start="6"&gt;
+&lt;li&gt;I found that this entire process of installing VCSA took be about one hour. Most of which is just spent waiting for the
+darn scripts to run. When it's finally done, you can log in and see all the glory that is vCenter.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-00-28.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-02-46.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-07-42.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-14-06.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-18-49.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-20-34.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-03.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-31.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-26-15.png" style="width: 800px;" /&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="attaching-esxi-hosts-to-vcenter"&gt;
+&lt;h2&gt;Attaching ESXi Hosts to vCenter&lt;/h2&gt;
+&lt;p&gt;It might seem strange, but you can attach the hosting ESXi instance to vCenter running inside it. It works just fine. Furthermore,
+after I attached all four ESXi instances, I then performed a  migration while vCenter was running from esxi1 to esxi4.&lt;/p&gt;
+&lt;p&gt;It took a really long time, however, the VM kept running throughout the process! Thats the primary benefit I've seen to using vCenter
+and managing a larger pool of ESXi hosts. In addition, you won't need to manually log in to however many ESXi you have, just to the single
+vCenter instance when managing your VMware cloud. Also it allows for High Availability and fault tolerance.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-30-03.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-31-16.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="migrating-a-vm-using-vmotion"&gt;
+&lt;h3&gt;Migrating a VM using vMotion&lt;/h3&gt;
+&lt;p&gt;To migrate a VM, you'll use 'vMotion'. You must enable 'vMotion' on the sending and receiving ESXi hosts. Then it's simply a matter of
+right-clicking and choosing to migrate. You can choose to migrate the storage or just the execution. In this example both storage and
+execution were migrated. You can see how at the very end the actual execution was migrated such that the running VM was not disrupted.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-56-57.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-58-44.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-06-34.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-10-18.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-15-21.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-17-47.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-19-13.png" style="width: 800px;" /&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="making-a-new-vm"&gt;
+&lt;h3&gt;Making a new VM&lt;/h3&gt;
+&lt;p&gt;There's a nice interface on ESXi to help you create new VMs. I however, like Qemu and my QS tool and want to use VMs I made there inside
+of ESXi. It's not that tough...&lt;/p&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make a 'dummy' VM in ESXi. Follow the prompts and make a VM that corresponds with the Linux flavor you actually want. Make sure to
+choose 'lsilogic' as the storage adapter.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Export that VM and you'll get a VMDK and OVF file on your local machine.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Convert your Qemu storage image from either qcow2 or raw to VMDK. &lt;em&gt;THIS IS IMPORTANT&lt;/em&gt;. You must include the following option on the
+&lt;cite&gt;qemu-img&lt;/cite&gt; convert utility to make the VMDK a &lt;cite&gt;streamOptimized&lt;/cite&gt; flavor of VMDK. ESXi just doesn't like the default that qemu-img spits out.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;qemu-img convert -O vmdk /rpool1/vm/deb.raw -o adapter_type=lsilogic,subformat=streamOptimized,compat6 deb.vmdk&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The important bit is &lt;code&gt;-o adapter_type=lsilogic,subformat=streamOptimized,compat6&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Update your OVF file to point to this VMDK you just made and make any other modifications you might want.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Use tar to make your OVA and include the OVF before your VMDK.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;That's it! You now have a VMware friendly OVA that you can import into ESXi (or Workstation, etc)&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="ansible"&gt;
+&lt;h2&gt;Ansible&lt;/h2&gt;
+&lt;p&gt;For extra credit... I have not yet done this. There are modules for ansible that can communicate with your ESXi hosts allowing for
+automated VM configuration and management.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="vm"></category><category term="vmware"></category></entry><entry><title>Qemu Script</title><link href="https://hack-char.github.io/qs.html" rel="alternate"></link><published>2018-03-17T00:00:00-07:00</published><updated>2018-03-24T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-03-17:/qs.html</id><summary type="html">&lt;p class="first last"&gt;Configuration and Bash script to make Qemu easy to use.&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;This will be updated...&lt;/p&gt;
 &lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
@@ -64,7 +559,379 @@ unloaded before reassigning to your VM.&lt;/p&gt;
 &lt;p&gt;Explain qemu group, sudo, auto-boot VM, ARCHITECTURE: nftables, bridge/tap, masquerade&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-</content><category term="vm"></category><category term="qemu"></category></entry><entry><title>Cloud and Virtualization</title><link href="https://hack-char.github.io/vm.html" rel="alternate"></link><published>2018-03-17T00:00:00-07:00</published><updated>2018-03-17T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-03-17:/vm.html</id><summary type="html">&lt;p class="first last"&gt;What the heck is 'Cloud'&lt;/p&gt;
+</content><category term="vm"></category><category term="qemu"></category></entry><entry><title>VMware vSphere How To</title><link href="https://hack-char.github.io/vcsa.html" rel="alternate"></link><published>2018-03-17T00:00:00-07:00</published><updated>2018-03-24T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-03-17:/vcsa.html</id><summary type="html">&lt;p class="first last"&gt;Installing and using VMware vSphere in a lab environment&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="summary"&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Most people that are familiar with cloud and virtualization have heard of VMware. However, many are not
+familiar with the VMware bare-metal hypervisor ESXi nor it's vSphere/vCenter management interfaces. This
+blog entry will help describe how to start using and learning about it.&lt;/p&gt;
+&lt;p&gt;The terms ESXi and vSphere are used interchangably (like the VMware webpage), however, they are
+differnt things. The term vSphere refers to the various management interfaces of the ESXi bare-metal
+hypervisor.&lt;/p&gt;
+&lt;p&gt;Fun Fact: ESX, the predecessor of ESXi, used a Linux kernel.&lt;/p&gt;
+&lt;div class="section" id="background"&gt;
+&lt;h3&gt;Background&lt;/h3&gt;
+&lt;p&gt;This is written based on some experience attempting to learn about vSphere and ESXi. An important thing
+to note at the beginning is that the latest version of ESXi will &lt;em&gt;NOT&lt;/em&gt; run on &lt;em&gt;MOST&lt;/em&gt; hardware. It's strictly
+limited to drivers that support the latest and greatest hardware available. That limits what VMware has to
+support and potentially makes ESXi &lt;cite&gt;better&lt;/cite&gt; from the standpoint of not requiring too much old hardware backward
+compatibility. It does make it a real pain to play with for a home user. However, it runs perfectly fine in a
+Qemu virtual machine. And Qemu runs on Linux which can be installed on just about any hardware you have.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;:) Linux :)&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Also, you can get started right away with the free version of ESXi and even use the 60-day trial vSphere
+and vCenter products. If you are lucky enough to have hardware that will run ESXi directly, you likely don't
+want to keep re-installing it every 60 days. Assuming you're using it for personal use, you can get a complete
+set of VMware licenses for ~$200/yr by joining VMUG VMware User's Group.&lt;/p&gt;
+&lt;p&gt;This How To is using examples running on a machine with an Intel Core i7 and 32GB RAM. If you have less
+than 12GB RAM, you won't be running the vCenter virtual machine as that VM requires 10GB. You can try using a very
+large swap partition, but expect it to be &lt;em&gt;PAINFULLY SLOW&lt;/em&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="lab"&gt;
+&lt;h2&gt;Lab&lt;/h2&gt;
+&lt;p&gt;ESXi is the hypervisor and you might think the first step is to install it. You would be &lt;strong&gt;wrong&lt;/strong&gt;.
+The VMware ecosystem expects an enterprise environment where there is &lt;cite&gt;DNS&lt;/cite&gt;, &lt;cite&gt;DHCP&lt;/cite&gt; and &lt;cite&gt;NTP&lt;/cite&gt; servers running. It
+integrates really well in a Windows Server environment, but this makes it a bit of a pain for a home user to
+start using it.&lt;/p&gt;
+&lt;p&gt;I chose to spin up a base Debian server with BIND, DHCP and NTP running on it and then serving these to my local VMs.
+Using &lt;a class="reference external" href="https://hack-char.github.io/qs.html"&gt;QS (Qemu Script)&lt;/a&gt; it is currently taking up 2% of one CPU core and 360MB RAM on my laptop.
+There's many ways to do this, such as using dns-masq, /etc/hosts, and so forth. Your first mission will be to supply
+these services to your lab environment.&lt;/p&gt;
+&lt;p&gt;This example will walk through installing the vCenter Server Appliance VCSA (a VM), on top of an ESXi hypervisor, along
+with three more ESXi virtual machines. Decide on how many instances of ESXi you would like to run as well as vCenter.
+Each will need an IP address and should be resolvable. The vCenter VM will need 10GB RAM and the ESXi will be allocated
+12GB (including the 10GB for the underlying VCSA VM).
+Further down we will make four ESXi instances, two with 12GB and two with 4GB RAM. This in the end required also
+using swap space on my machine that has 32GB memory.&lt;/p&gt;
+&lt;p&gt;I've found that using ZFS with LZ4 compression to make my virtual machine life &lt;strong&gt;significantly&lt;/strong&gt; better. If you
+don't have some method of using a compressed filesystem, expect you will be using a tremendous amount of space.
+I allocated 500GB for ESXi 1 and 100GB for ESXi 2 through ESXi 4 for a total of 800GB. This will work for the
+examples below, but will severely limit how many VMs you can load. Using ZFS with LZ4 compression, the amount
+of underlying disk space I used is 28GB total. Using compressed disk space is likely one reason it took ~1 hour
+to let vCenter install.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="installing-esxi"&gt;
+&lt;h2&gt;Installing ESXi&lt;/h2&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make the underlying storage for the first ESXi instance ESXi1.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;qemu-img create -f raw esxi1.raw 500GB&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Create the QS definition for esxi1&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;${HOME}/.qs/esxi1.conf&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;vm esxi1
+     cores 2
+     mem 12
+     internet 10.1.1.155
+     image /rpool1/vm/esxi1.raw
+     raw
+     cpu host
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You will need to specify the actual path to the storage file you created in step 1 as my &lt;code&gt;/rpool1/vm&lt;/code&gt; path is
+unlikely to be yours. If you made a qcow2 image, do not include &lt;code&gt;raw&lt;/code&gt;. You will have to include &lt;code&gt;cpu host&lt;/code&gt;
+otherwise ESXi won't install. You could also include &lt;code&gt;vnc &amp;lt;password&amp;gt;&lt;/code&gt; if you want to run headless normally and
+just connect using VNC (for example using tightvnc). Also &lt;code&gt;mute true&lt;/code&gt; would disable the ALSA audio for this VM
+which would be appropriate in this case.&lt;/p&gt;
+&lt;ol class="arabic" start="3"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Install the hypervisor using&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;qs up esxi1 bootonce /var/iso/VMware-VMvisor-Installer-6.5.0.update01-5969303.x86_64.iso&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;You will need to interact with the VM and choose appropriate options as you go.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Initial screens as the ISO boots.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/esxi/esxi1.svg" type="image/svg+xml"&gt;
+first screen installing ESXi&lt;/object&gt;
+&lt;p class="caption"&gt;First screen of nineteen when installing ESXi.&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 2" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-44-59.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;2/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 3" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-23.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;3/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 4" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-42.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;4/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 5" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-51.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;5/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 6" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-45-59.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;6/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 7" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-37.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;7/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 8" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-44.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;8/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 9" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-46-51.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;9/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 10" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-18.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;10/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 11" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-27.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;11/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 12" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-51-52.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;12/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 13" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-05.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;13/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 14" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-19.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;14/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 15" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-53-33.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;15/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 16" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-54-45.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;16/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 17" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-55-16.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;17/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 18" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-55-27.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;18/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 19" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-58-16.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;19/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 20" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-58-38.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;20/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 21" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-59-12.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;21/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;img alt="screen 22" src="/cloud/vmware/esxi/Screenshot_2018-03-24_08-59-30.png" style="width: 80%;" /&gt;
+&lt;p class="caption"&gt;22/22&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="multiple-esxi"&gt;
+&lt;h3&gt;Multiple ESXi&lt;/h3&gt;
+&lt;p&gt;Go ahead and make copies of the storage file you just created for esxi1. Alternately you can create smaller files in the
+100GB range and install again. If you make copies, be prepared to:&lt;/p&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Delete and re-create your storage in each VM. You can select VMFS6 instead of the default VMFS5. This is necessary if you
+want to connect this ESXi to vCenter. Otherwise the storage on each ESXi will have the same UUID and will conflict as you
+add it to vCenter.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Assign a unique IP address to each ESXi. I chose to use static IP addresses. If you want to use DHCP, you'll need to
+apply a uniquely defined ethernet MAC to each QS vm description&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;ether 11:22:33:44:55:66&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Also specify the IP to be assigned by your DHCP server such that the name is resolved correctly. I chose to use
+esxi1.local, esxi2.local, esxi3.local and esxi4.local.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;... start over? There's at least one gotcha where even though you change the IP using the web UI, it doesn't change everywhere.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="installing-vcenter"&gt;
+&lt;h2&gt;Installing vCenter&lt;/h2&gt;
+&lt;p&gt;Remember: &lt;em&gt;BE PATIENT&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;If you interrupt the installation process of the VM, it will not work and you will need to delete it and start over.&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;I hate running executables from other companies when I shouldn't have to. So I refused to use the executable with the VCSA ISO.
+I extracted &lt;code&gt;VMware-vCenter-Server-Appliance-6.5.0.10000-5973321_OVF10.ova&lt;/code&gt; from the installation ISO and then imported that into
+ESXi 1.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;BE PATIENT&lt;/em&gt;. You'll see a number of different changes in the console as VCSA is being booted and running its never-ending
+installation scripts. &lt;em&gt;DO NOT MESS WITH IT&lt;/em&gt;. &lt;em&gt;IF YOU MESS WITH IT YOU WILL BE DELETING IT AND STARTING OVER&lt;/em&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter1.svg" type="image/svg+xml"&gt;
+First vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;Initial console view inside the vSphere Web UI showing the VCSA installation beginning. (1/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter2.svg" type="image/svg+xml"&gt;
+Second vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;Next vCenter installation screen. (2/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter3.svg" type="image/svg+xml"&gt;
+Third vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;(3/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter4.svg" type="image/svg+xml"&gt;
+Fourth vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;(4/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="figure"&gt;
+&lt;object data="/cloud/vmware/vcenter5.svg" type="image/svg+xml"&gt;
+Fifth vCenter installation screen&lt;/object&gt;
+&lt;p class="caption"&gt;(5/5)&lt;/p&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic" start="3"&gt;
+&lt;li&gt;&lt;p class="first"&gt;When you see this screen showing it was assigned a DHCP address (even if you manually chose an IP address to assign it), you
+are ready to log into it. You'll need to log in on the console the first time to set the root password. It will not require a default
+at this point but step you through a 2-step verification of a new root password.&lt;/p&gt;
+&lt;p&gt;If you want to be sporty and see what the heck it is doing before this screen, you can log in using the pre-default 'vmware' password
+for root. But be warned, you will probably mess something up and have to re-install &lt;em&gt;again&lt;/em&gt;. I installed this thing a million times.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-47-52.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic simple" start="4"&gt;
+&lt;li&gt;When you are at this point, you can finally open the web interface of the VCSA VM. &lt;em&gt;If you're using QS&lt;/em&gt;, be warned, you will need
+to add the IP or IP range that this VCSA VM has to the NFTables trusted_ip set. If you don't then it will block this IP and you won't
+be happy. You will be :( or at best :|&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-17.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic simple" start="5"&gt;
+&lt;li&gt;Yet more installation screens. Yes, you thought you were done installing VCSA, but &lt;strong&gt;YOU WERE NOT!&lt;/strong&gt; Follow through the rest of these
+installation screens to let it kick off yet more scripts. It is important to fill in and remember the Single Sign On (SSO) set up
+as you will need to enter the &lt;a class="reference external" href="mailto:'administrator&amp;#64;some.sso"&gt;'administrator&amp;#64;some.sso&lt;/a&gt;' as your username at the final, real web interface.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-54-38.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-55-07.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_19-56-48.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;ol class="arabic simple" start="6"&gt;
+&lt;li&gt;I found that this entire process of installing VCSA took be about one hour. Most of which is just spent waiting for the
+darn scripts to run. When it's finally done, you can log in and see all the glory that is vCenter.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-00-28.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-02-46.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-07-42.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-14-06.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-18-49.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-20-34.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-03.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-21-31.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-26-15.png" style="width: 800px;" /&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="attaching-esxi-hosts-to-vcenter"&gt;
+&lt;h2&gt;Attaching ESXi Hosts to vCenter&lt;/h2&gt;
+&lt;p&gt;It might seem strange, but you can attach the hosting ESXi instance to vCenter running inside it. It works just fine. Furthermore,
+after I attached all four ESXi instances, I then performed a  migration while vCenter was running from esxi1 to esxi4.&lt;/p&gt;
+&lt;p&gt;It took a really long time, however, the VM kept running throughout the process! Thats the primary benefit I've seen to using vCenter
+and managing a larger pool of ESXi hosts. In addition, you won't need to manually log in to however many ESXi you have, just to the single
+vCenter instance when managing your VMware cloud. Also it allows for High Availability and fault tolerance.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-30-03.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-10_20-31-16.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="migrating-a-vm-using-vmotion"&gt;
+&lt;h3&gt;Migrating a VM using vMotion&lt;/h3&gt;
+&lt;p&gt;To migrate a VM, you'll use 'vMotion'. You must enable 'vMotion' on the sending and receiving ESXi hosts. Then it's simply a matter of
+right-clicking and choosing to migrate. You can choose to migrate the storage or just the execution. In this example both storage and
+execution were migrated. You can see how at the very end the actual execution was migrated such that the running VM was not disrupted.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-56-57.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_14-58-44.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-06-34.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-10-18.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-15-21.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-17-47.png" style="width: 800px;" /&gt;
+&lt;hr class="docutils" /&gt;
+&lt;img alt="" src="/cloud/vmware/Screenshot_2018-03-11_15-19-13.png" style="width: 800px;" /&gt;
+&lt;/div&gt;
+&lt;hr class="docutils" /&gt;
+&lt;div class="section" id="making-a-new-vm"&gt;
+&lt;h3&gt;Making a new VM&lt;/h3&gt;
+&lt;p&gt;There's a nice interface on ESXi to help you create new VMs. I however, like Qemu and my QS tool and want to use VMs I made there inside
+of ESXi. It's not that tough...&lt;/p&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make a 'dummy' VM in ESXi. Follow the prompts and make a VM that corresponds with the Linux flavor you actually want. Make sure to
+choose 'lsilogic' as the storage adapter.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Export that VM and you'll get a VMDK and OVF file on your local machine.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Convert your Qemu storage image from either qcow2 or raw to VMDK. &lt;em&gt;THIS IS IMPORTANT&lt;/em&gt;. You must include the following option on the
+&lt;cite&gt;qemu-img&lt;/cite&gt; convert utility to make the VMDK a &lt;cite&gt;streamOptimized&lt;/cite&gt; flavor of VMDK. ESXi just doesn't like the default that qemu-img spits out.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;qemu-img convert -O vmdk /rpool1/vm/deb.raw -o adapter_type=lsilogic,subformat=streamOptimized,compat6 deb.vmdk&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The important bit is &lt;code&gt;-o adapter_type=lsilogic,subformat=streamOptimized,compat6&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Update your OVF file to point to this VMDK you just made and make any other modifications you might want.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Use tar to make your OVA and include the OVF before your VMDK.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;That's it! You now have a VMware friendly OVA that you can import into ESXi (or Workstation, etc)&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="ansible"&gt;
+&lt;h2&gt;Ansible&lt;/h2&gt;
+&lt;p&gt;For extra credit... I have not yet done this. There are modules for ansible that can communicate with your ESXi hosts allowing for
+automated VM configuration and management.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="vm"></category><category term="vmware"></category></entry><entry><title>Cloud and Virtualization</title><link href="https://hack-char.github.io/vm.html" rel="alternate"></link><published>2018-03-17T00:00:00-07:00</published><updated>2018-03-17T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-03-17:/vm.html</id><summary type="html">&lt;p class="first last"&gt;What the heck is 'Cloud'&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;This will be updated...&lt;/p&gt;
 &lt;div class="section" id="cloud"&gt;
 &lt;h2&gt;Cloud&lt;/h2&gt;

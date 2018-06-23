@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Qemu Script</title>
+    <title>Hack Char - security</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="Char">
@@ -64,7 +64,7 @@
           <div class="nav-collapse">
             <ul class="nav">
                           <li class="divider-vertical"></li>
-                  <li class="active">
+                  <li >
                     <a href="https://hack-char.github.io/category/cloud.html">
 						<i class="icon-folder-open icon-large"></i>cloud
 					</a>
@@ -89,102 +89,30 @@
     <div class="container-fluid">
       <div class="row">
         <div class="span9" id="content">
-<section id="content">
-        <article>
-                <header>
-                        <h1>
-                                <a href=""
-                                        rel="bookmark"
-                                        title="Permalink to Qemu Script">
-                                        Qemu Script
-                                </a>
-                        </h1>
-                </header>
-                <div class="entry-content">
-                <div class="well">
-<footer class="post-info">
+        <div class="article">
+                <h1><a href="https://hack-char.github.io/pki.html">PKI Introduction and Use</a></h1>
+                <div class="well small"><footer class="post-info">
 <span class="label">Date</span>
-<abbr class="published" title="2018-03-17T00:00:00-07:00">
-        <i class="icon-calendar"></i>Sat 17 March 2018
+<abbr class="published" title="2018-06-23T00:00:00-07:00">
+        <i class="icon-calendar"></i>Sat 23 June 2018
 </abbr>
 <span class="label">By</span>
 <a href="https://hack-char.github.io/author/char.html"><i class="icon-user"></i>Char</a>
 <span class="label">Category</span>
-<a href="https://hack-char.github.io/category/cloud.html"><i class="icon-folder-open"></i>cloud</a>.
+<a href="https://hack-char.github.io/category/security.html"><i class="icon-folder-open"></i>security</a>.
 
 
 <span class="label">Tags</span>
-	<a href="https://hack-char.github.io/tag/vm.html"><i class="icon-tag"></i>vm</a>
-	<a href="https://hack-char.github.io/tag/qemu.html"><i class="icon-tag"></i>qemu</a>
-</footer><!-- /.post-info -->                </div>
-                <p>This will be updated...</p>
-<div class="section" id="summary">
-<h2>Summary</h2>
-<p>Using Qemu from the command line can be a real pain. It either requires very long commands or maintaining many different scripts.
-Normally people just use something like libvirt or another set of programs to make it easier. I like doing things the hard way. I prefer
-minimizing the amount of programs running in general and especially on a dedicated machine hosting my VMs. This Qemu Script helps do that.</p>
-<p>QS is a work in progress. It's at a state where it is very usable, but not well documented. It also requires manually copying files to
-install. That was on purpose since it's possible you might blow away your NFTables firewall if you weren't paying attention. In the future
-I plan to make a debian package for ease of use.</p>
-<div class="section" id="download-and-install">
-<h3>Download and Install</h3>
-<p>QS is available on GitHub at <a class="reference external" href="https://github.com/Hack-Char/qs">https://github.com/Hack-Char/qs</a></p>
-</div>
-<div class="section" id="overview">
-<h3>Overview</h3>
-<p>Qemu Script (QS) has a main Bash script <code>/usr/bin/qs</code> used to start, stop and interact with your virtual machines.
-It also tightly interacts with NFTables to allow virtual machines access to each other and/or the Internet. There are a couple
-other scripts that can be used as examples to pass virtual-IO PCI devices to your vm - for example <code>/usr/sbin/qs-wifi-before.sh</code>
-which will connect my wifi and ethernet devices directly to the vm.</p>
-<p>Virtual machines are defined by a storage file as well as characteristics such as the number of CPUs, amount of memory, etc.
-VMware solutions rely on OVA (Open Virtual Machine Archive) and OVF (Open Virtual Machine File). The OVF defines characteristics
-and is tar'd into an OVA along with the VMDK (Virtual Machine Disk). For QS, the storage is either a qcow2 or raw file and the
-characteristics are defined in a file located in <code>${HOME}/.qs</code> or <code>/etc/qs</code>. An example of such a file is:</p>
-<pre class="literal-block">
-vm debian
-        cores 2
-        mem 4
-        image /var/vm/debian.qcow2
-        internet 192.168.100.1
-</pre>
-<p>To use this example VM, it would be started with <code>qs up debian</code>, the memory and cpu usage can be checked with <code>qs info</code>
-and if required you can issue an ACPI power down (similar to pushing your power button) using <code>qs down 1</code> (where 1 is the index
-of the VM reported by <code>qs info</code>).</p>
-</div>
-<div class="section" id="creating-a-vm">
-<h3>Creating a VM</h3>
-<ol class="arabic simple">
-<li>Create the disk storage using <code>qemu-img</code></li>
-<li>Create the description, for example in <code>${HOME}/.qs/newvm</code></li>
-<li>Run the install ISO using <code>qs up newvm bootonce /var/iso/debian-install.iso</code></li>
-</ol>
-<p>In the future you can just run <code>qs up newvm</code> to boot after the ISO installed.</p>
-</div>
-<div class="section" id="basic-vm-interaction">
-<h3>Basic VM interaction</h3>
-<blockquote>
-<code>TO DO</code></blockquote>
-<p>Using <cite>alt-f1</cite> and other send-key type messages. Introduce using TCP ports for interacting with the VM.
-Mention integration into <code>pass</code> password manager.</p>
-</div>
-<div class="section" id="configuring-for-virtual-io">
-<h3>Configuring for Virtual IO</h3>
-<blockquote>
-<code>TO DO</code></blockquote>
-<p>Explain how to find your virt-io groups and the process to figure out which modules need to be
-unloaded before reassigning to your VM.</p>
-</div>
-<div class="section" id="more-things-to-explain">
-<h3>More things to explain</h3>
-<blockquote>
-<code>TO DO</code></blockquote>
-<p>Explain qemu group, sudo, auto-boot VM, ARCHITECTURE: nftables, bridge/tap, masquerade</p>
-</div>
-</div>
+	<a href="https://hack-char.github.io/tag/pki.html"><i class="icon-tag"></i>pki</a>
+	<a href="https://hack-char.github.io/tag/security.html"><i class="icon-tag"></i>security</a>
+</footer><!-- /.post-info --></div>
+                <div class="summary"><p class="first last">What is PKI and how to set it up</p>
 
-                </div><!-- /.entry-content -->
-        </article>
-</section>
+                        <a class="btn primary xsmall" href="https://hack-char.github.io/pki.html">more ...</a>
+                </div>
+        </div>
+        <hr />
+
         </div><!--/span-->
 
                 <div class="span3 well sidebar-nav" id="sidebar">

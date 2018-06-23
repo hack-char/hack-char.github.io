@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Hack Char - security</title><link href="https://hack-char.github.io/" rel="alternate"></link><link href="https://hack-char.github.io/feeds/security.atom.xml" rel="self"></link><id>https://hack-char.github.io/</id><updated>2018-06-23T00:00:00-07:00</updated><entry><title>PKI Introduction and Use</title><link href="https://hack-char.github.io/pki.html" rel="alternate"></link><published>2018-06-23T00:00:00-07:00</published><updated>2018-06-23T00:00:00-07:00</updated><author><name>Char</name></author><id>tag:hack-char.github.io,2018-06-23:/pki.html</id><summary type="html">&lt;p class="first last"&gt;What is PKI and how to set it up&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="summary"&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Public Key Infrastructure (PKI) is a common authentication mechanism. Instead of knowing a secret like a password
+or PIN, it relies on a trusted entity pre-authenticating others and using public key cryptography to provide
+proof of authentication. The most common example would be secure web traffic over TLS. Another is using
+client certificates to log in to services such as a VPN.&lt;/p&gt;
+&lt;p&gt;While Microsoft Windows Server comes with PKI applications, this discussion will focus on Linux and free
+alternatives - specifically OpenSSL.&lt;/p&gt;
+&lt;div class="section" id="background"&gt;
+&lt;h3&gt;Background&lt;/h3&gt;
+&lt;div class="figure align-center"&gt;
+&lt;img alt="CA Architecture" src="/security/figure/CA.png" /&gt;
+&lt;/div&gt;
+&lt;p&gt;Certificate Authority Architecture&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;Who do you trust? To start with, you must be trust the manufacturer of your computer. Also whover made your
+operating system, browser, and everyone they trust. Take a look at the long list of Certificate Authorities (CA)
+that come preloaded at each step. Do you trust that foreign CA? Do you need to? If not, why enable it? The usual answer
+is convenience.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="process"&gt;
+&lt;h3&gt;Process&lt;/h3&gt;
+&lt;p&gt;The CA generates a public &amp;amp; private key pair on a very secure system. When not being used this should be stored
+physically offline somewhere safe. By various standards, it's actually stored in a Hardware Security Module (HSM). A
+self-signed certificate is generated for this root CA key pair. This certificate is widely distributed and the thing
+that everyone trusts.&lt;/p&gt;
+&lt;p&gt;Unless you're setting up PKI for an extremely small group, you never use the CA key pair in normal operation. The
+reason is there's no method to easily invalidate this CA certificate. You would need to have all users manually do that
+or rely on your IT automation. Of course, if that relied on PKI, you're back to manually doing this on all machines.&lt;/p&gt;
+&lt;p&gt;One or more 'intermediate' CA key pairs and certificates are generated. These are signed by the root CA and have
+delegated CA privileges. Perhaps one per physical location or type of certificates it will sign. Maybe a special one
+to generate Certificate Revocation Lists (CRLs). If you're up to a challenge it could be tied into an Online Certificate
+Status Protocal (OCSP) server.&lt;/p&gt;
+&lt;p&gt;These intermediate CAs then validate and sign individual certifictes for others. In most cases it is fully automated
+(see Automated Certificate Management Environment ACME). For small groups it would still be mostly manual. It is not
+too difficult to configure and script for a small group - the use case we will be discussing. Furthermore the examples
+here will not include this level of intermediate CAs to keep it less complicated.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="key-generation"&gt;
+&lt;h3&gt;Key Generation&lt;/h3&gt;
+&lt;p&gt;If doing this 'for real' make sure you are generating good keys! Generating a key within a VM is not a good idea.
+The amount of entropy you get from a VM instance is questionable as well as the source of that entropy. It is highly
+recommended to use a local machine disconnected from the network to generate your keys. Preferably with 'rng-tools'
+installed and entropy gathered from your TPM or CPU hardware extended functionality.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="future"&gt;
+&lt;h3&gt;Future&lt;/h3&gt;
+&lt;p&gt;Why use PKI and CAs? This is so convoluted! A good alternative that has been proposed is to distribute web page
+certificates (actually just the public key) over DNS.
+Each user is already trusting their DNS to respond with the correct IP address, or a man-in-the-middle
+attack becomes much easier. Using DNSSEC and trusted DNS servers it would be reasonable to distribute both CRLs
+and certificates. Take a look at RFC 4438 (February 2006). I expect this hasn't become a standard yet since too much
+money has been poured into CAs and their tight relationships to browsers and operating systems. A different standard
+'DANE' RFC 6698 was proposed in August of 2012. It also has not gained traction of major browser developers. Is this
+because of inertia, kickbacks from CAs to browsers distributing their certificate, or something else?
+For non-savvy users DANE could be a problem. It would mean whoever controls your DNS now can potentially spy and
+man-in-the-middle your 'secure' web connections. As for most this is an ISP or other corporation, you're really just
+trusting a different set of actors.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="configure-and-use-openssl-certificate-authority"&gt;
+&lt;h2&gt;Configure and Use OpenSSL Certificate Authority&lt;/h2&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Using your favorite Linux distibution, install the OpenSSL package.
+This example will be specific to Debian, but mostly carry over to others.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt install openssl&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;You can use the default configurations that come with this package. I will
+be describing a stripped down set to get you up and running quickly.
+We're going to use a separate directory to keep all our modified files in one
+place. This requires setting the environment variable OPENSSL_CONF=/var/ca/openssl.cnf
+This is the directory structure we will be using:&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/var/ca/openssl.cnf            - configuration file
+/var/ca                        - root of the CA
+       ./newcerts/             - where new certs are kept
+       ./private/ca_key.pem    - where we keep our private key
+       ./cacert.pem            - our CA cert
+       ./index.txt             - index of certs signed
+       ./crlnumber             - CRL number of the current crl
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ol class="arabic" start="3"&gt;
+&lt;li&gt;&lt;p class="first"&gt;Generate CA public/private key&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl genrsa -out /var/ca/private/ca_key.pem 4096&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make CA certificate&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl req -x509 -out /var/ca/cacert.pem&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;For advanced use... Try setting up your own OSCP responder:
+&lt;a class="reference external" href="http://isrlabs.net/wordpress/?p=169"&gt;http://isrlabs.net/wordpress/?p=169&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="distributing-and-using-your-ca-certificate"&gt;
+&lt;h2&gt;Distributing and Using your CA Certificate&lt;/h2&gt;
+&lt;p&gt;To install in Firefox:&lt;/p&gt;
+&lt;ol class="arabic simple"&gt;
+&lt;li&gt;Preferences -&amp;gt; Advanced -&amp;gt; Certificates -&amp;gt; View Certificates&lt;/li&gt;
+&lt;li&gt;Import. Choose your ''cacert.pem'' file.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class="section" id="set-up-apache-with-your-certificate"&gt;
+&lt;h2&gt;Set up Apache with your Certificate&lt;/h2&gt;
+&lt;ol class="arabic"&gt;
+&lt;li&gt;&lt;p class="first"&gt;If Apache is not already installed:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;apt install apache2&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Generate your public/private key&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl genrsa /etc/ssl/private/apache.key 4096&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Make a Certificate Signing Request&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl req -new -key /etc/ssl/private/apache.key -out apache.csr&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Send CSR to CA and get it signed&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;openssl ca -in ./apache.csr out ./apache.crt&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Install certificate in apache and configure apache&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;For advanced use... Try stapling OSCP responses from Apache:
+&lt;a class="reference external" href="https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html"&gt;https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="pki"></category><category term="security"></category></entry></feed>

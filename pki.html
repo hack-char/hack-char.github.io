@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>PKI Introduction and Use</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Char">
+
+    <!-- Le styles -->
+    <link rel="stylesheet" href="https://hack-char.github.io/theme/css/bootstrap.dark.css" type="text/css" />
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+      .tag-1 {
+        font-size: 20pt;
+      }
+      .tag-2 {
+        font-size: 17pt;
+      }
+      .tag-3 {
+        font-size: 14pt;
+      }
+      .tag-4 {
+        font-size: 12pt;
+     }
+    </style>
+    <link href="https://hack-char.github.io/theme/css/bootstrap-responsive.dark.css" rel="stylesheet">
+        <link href="https://hack-char.github.io/theme/css/font-awesome.css" rel="stylesheet">
+
+    <link href="https://hack-char.github.io/theme/css/pygments.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="https://hack-char.github.io/theme/images/favicon.ico">
+    <link rel="apple-touch-icon" href="https://hack-char.github.io/theme/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://hack-char.github.io/theme/images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://hack-char.github.io/theme/images/apple-touch-icon-114x114.png">
+
+    <link href="https://hack-char.github.io/" type="application/atom+xml" rel="alternate" title="Hack Char ATOM Feed" />
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="https://hack-char.github.io/index.html">Hack Char </a>
+          <div class="nav-collapse">
+            <ul class="nav">
+                          <li class="divider-vertical"></li>
+                  <li >
+                    <a href="https://hack-char.github.io/category/cloud.html">
+						<i class="icon-folder-open icon-large"></i>cloud
+					</a>
+                  </li>
+                  <li class="active">
+                    <a href="https://hack-char.github.io/category/security.html">
+						<i class="icon-folder-open icon-large"></i>security
+					</a>
+                  </li>
+
+                          <ul class="nav pull-right">
+                                <li><a href="https://hack-char.github.io/archives.html"><i class="icon-th-list"></i>Archives</a></li>
+                          </ul>
+
+            </ul>
+            <!--<p class="navbar-text pull-right">Logged in as <a href="#">username</a></p>-->
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="span9" id="content">
+<section id="content">
+        <article>
+                <header>
+                        <h1>
+                                <a href=""
+                                        rel="bookmark"
+                                        title="Permalink to PKI Introduction and Use">
+                                        PKI Introduction and Use
+                                </a>
+                        </h1>
+                </header>
+                <div class="entry-content">
+                <div class="well">
+<footer class="post-info">
+<span class="label">Date</span>
+<abbr class="published" title="2018-06-23T00:00:00-07:00">
+        <i class="icon-calendar"></i>Sat 23 June 2018
+</abbr>
+<span class="label">By</span>
+<a href="https://hack-char.github.io/author/char.html"><i class="icon-user"></i>Char</a>
+<span class="label">Category</span>
+<a href="https://hack-char.github.io/category/security.html"><i class="icon-folder-open"></i>security</a>.
+
+
+<span class="label">Tags</span>
+	<a href="https://hack-char.github.io/tag/pki.html"><i class="icon-tag"></i>pki</a>
+	<a href="https://hack-char.github.io/tag/security.html"><i class="icon-tag"></i>security</a>
+</footer><!-- /.post-info -->                </div>
+                <div class="section" id="summary">
+<h2>Summary</h2>
+<p>Public Key Infrastructure (PKI) is a common authentication mechanism. Instead of knowing a secret like a password
+or PIN, it relies on a trusted entity pre-authenticating others and using public key cryptography to provide
+proof of authentication. The most common example would be secure web traffic over TLS. Another is using
+client certificates to log in to services such as a VPN.</p>
+<p>While Microsoft Windows Server comes with PKI applications, this discussion will focus on Linux and free
+alternatives - specifically OpenSSL.</p>
+<div class="section" id="background">
+<h3>Background</h3>
+<div class="figure align-center">
+<img alt="CA Architecture" src="/security/figure/CA.png" />
+</div>
+<p>Certificate Authority Architecture</p>
+<hr class="docutils" />
+<p>Who do you trust? To start with, you must be trust the manufacturer of your computer. Also whover made your
+operating system, browser, and everyone they trust. Take a look at the long list of Certificate Authorities (CA)
+that come preloaded at each step. Do you trust that foreign CA? Do you need to? If not, why enable it? The usual answer
+is convenience.</p>
+</div>
+<div class="section" id="process">
+<h3>Process</h3>
+<p>The CA generates a public &amp; private key pair on a very secure system. When not being used this should be stored
+physically offline somewhere safe. By various standards, it's actually stored in a Hardware Security Module (HSM). A
+self-signed certificate is generated for this root CA key pair. This certificate is widely distributed and the thing
+that everyone trusts.</p>
+<p>Unless you're setting up PKI for an extremely small group, you never use the CA key pair in normal operation. The
+reason is there's no method to easily invalidate this CA certificate. You would need to have all users manually do that
+or rely on your IT automation. Of course, if that relied on PKI, you're back to manually doing this on all machines.</p>
+<p>One or more 'intermediate' CA key pairs and certificates are generated. These are signed by the root CA and have
+delegated CA privileges. Perhaps one per physical location or type of certificates it will sign. Maybe a special one
+to generate Certificate Revocation Lists (CRLs). If you're up to a challenge it could be tied into an Online Certificate
+Status Protocal (OCSP) server.</p>
+<p>These intermediate CAs then validate and sign individual certifictes for others. In most cases it is fully automated
+(see Automated Certificate Management Environment ACME). For small groups it would still be mostly manual. It is not
+too difficult to configure and script for a small group - the use case we will be discussing. Furthermore the examples
+here will not include this level of intermediate CAs to keep it less complicated.</p>
+</div>
+<div class="section" id="key-generation">
+<h3>Key Generation</h3>
+<p>If doing this 'for real' make sure you are generating good keys! Generating a key within a VM is not a good idea.
+The amount of entropy you get from a VM instance is questionable as well as the source of that entropy. It is highly
+recommended to use a local machine disconnected from the network to generate your keys. Preferably with 'rng-tools'
+installed and entropy gathered from your TPM or CPU hardware extended functionality.</p>
+</div>
+<div class="section" id="future">
+<h3>Future</h3>
+<p>Why use PKI and CAs? This is so convoluted! A good alternative that has been proposed is to distribute web page
+certificates (actually just the public key) over DNS.
+Each user is already trusting their DNS to respond with the correct IP address, or a man-in-the-middle
+attack becomes much easier. Using DNSSEC and trusted DNS servers it would be reasonable to distribute both CRLs
+and certificates. Take a look at RFC 4438 (February 2006). I expect this hasn't become a standard yet since too much
+money has been poured into CAs and their tight relationships to browsers and operating systems. A different standard
+'DANE' RFC 6698 was proposed in August of 2012. It also has not gained traction of major browser developers. Is this
+because of inertia, kickbacks from CAs to browsers distributing their certificate, or something else?
+For non-savvy users DANE could be a problem. It would mean whoever controls your DNS now can potentially spy and
+man-in-the-middle your 'secure' web connections. As for most this is an ISP or other corporation, you're really just
+trusting a different set of actors.</p>
+</div>
+</div>
+<div class="section" id="configure-and-use-openssl-certificate-authority">
+<h2>Configure and Use OpenSSL Certificate Authority</h2>
+<ol class="arabic">
+<li><p class="first">Using your favorite Linux distibution, install the OpenSSL package.
+This example will be specific to Debian, but mostly carry over to others.</p>
+<p><code>apt install openssl</code></p>
+</li>
+<li><p class="first">You can use the default configurations that come with this package. I will
+be describing a stripped down set to get you up and running quickly.
+We're going to use a separate directory to keep all our modified files in one
+place. This requires setting the environment variable OPENSSL_CONF=/var/ca/openssl.cnf
+This is the directory structure we will be using:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span>/var/ca/openssl.cnf            - configuration file
+/var/ca                        - root of the CA
+       ./newcerts/             - where new certs are kept
+       ./private/ca_key.pem    - where we keep our private key
+       ./cacert.pem            - our CA cert
+       ./index.txt             - index of certs signed
+       ./crlnumber             - CRL number of the current crl
+</pre></div>
+<ol class="arabic" start="3">
+<li><p class="first">Generate CA public/private key</p>
+<p><code>openssl genrsa -out /var/ca/private/ca_key.pem 4096</code></p>
+</li>
+<li><p class="first">Make CA certificate</p>
+<p><code>openssl req -x509 -out /var/ca/cacert.pem</code></p>
+</li>
+</ol>
+<p>For advanced use... Try setting up your own OSCP responder:
+<a class="reference external" href="http://isrlabs.net/wordpress/?p=169">http://isrlabs.net/wordpress/?p=169</a></p>
+</div>
+<div class="section" id="distributing-and-using-your-ca-certificate">
+<h2>Distributing and Using your CA Certificate</h2>
+<p>To install in Firefox:</p>
+<ol class="arabic simple">
+<li>Preferences -&gt; Advanced -&gt; Certificates -&gt; View Certificates</li>
+<li>Import. Choose your ''cacert.pem'' file.</li>
+</ol>
+</div>
+<div class="section" id="set-up-apache-with-your-certificate">
+<h2>Set up Apache with your Certificate</h2>
+<ol class="arabic">
+<li><p class="first">If Apache is not already installed:</p>
+<p><code>apt install apache2</code></p>
+</li>
+<li><p class="first">Generate your public/private key</p>
+<p><code>openssl genrsa /etc/ssl/private/apache.key 4096</code></p>
+</li>
+<li><p class="first">Make a Certificate Signing Request</p>
+<p><code>openssl req -new -key /etc/ssl/private/apache.key -out apache.csr</code></p>
+</li>
+<li><p class="first">Send CSR to CA and get it signed</p>
+<p><code>openssl ca -in ./apache.csr out ./apache.crt</code></p>
+</li>
+<li><p class="first">Install certificate in apache and configure apache</p>
+</li>
+</ol>
+<p>For advanced use... Try stapling OSCP responses from Apache:
+<a class="reference external" href="https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html">https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html</a></p>
+</div>
+
+                </div><!-- /.entry-content -->
+        </article>
+</section>
+        </div><!--/span-->
+
+                <div class="span3 well sidebar-nav" id="sidebar">
+<ul class="nav nav-list">
+<li class="nav-header"><h4><i class="icon-external-link"></i>blogroll</h4></li>
+    <li><a href="https://github.com/hack-char"><i class="icon-external-link"></i>Hack Char @ GitHub</a></li>
+<li class="nav-header"><h4><i class="icon-home icon-large"></i> social</h4></li>
+<li><a href="https://hack-char.github.io/" rel="alternate"><i class="icon-bookmark icon-large"></i>atom feed</a></li>
+    <li><a href="https://twitter.com/@Hack_Char"><i class="icon-Hack Char @ Twitter-sign icon-large"></i>Hack Char @ Twitter</a></li>
+
+<li class="nav-header"><h4><i class="icon-folder-close icon-large"></i>Categories</h4></li>
+<li>
+<a href="https://hack-char.github.io/category/cloud.html">
+    <i class="icon-folder-open icon-large"></i>cloud
+</a>
+</li>
+<li>
+<a href="https://hack-char.github.io/category/security.html">
+    <i class="icon-folder-open icon-large"></i>security
+</a>
+</li>
+
+<li class="nav-header"><h4><i class="icon-tags icon-large"></i>Tags</h4></li>
+
+
+</ul>        </div><!--/.well -->
+
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <address id="about">
+                Proudly powered by <a href="http://pelican.notmyidea.org/">Pelican <i class="icon-external-link"></i></a>,
+                                which takes great advantage of <a href="http://python.org">Python <i class="icon-external-link"></i></a>.
+        </address><!-- /#about -->
+
+        <p>The theme is based on <a href="http://twitter.github.com/bootstrap/">Bootstrap from Twitter <i class="icon-external-link"></i></a>,
+                   and <a href="http://fortawesome.github.com/Font-Awesome/">Font-Awesome <i class="icon-external-link"></i></a>, thanks!</p>
+      </footer>
+
+    </div><!--/.fluid-container-->
+
+
+
+    <!-- Le javascript -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://hack-char.github.io/theme/js/jquery-1.7.2.min.js"></script>
+    <script src="https://hack-char.github.io/theme/js/bootstrap.min.js"></script>
+  </body>
+</html>
